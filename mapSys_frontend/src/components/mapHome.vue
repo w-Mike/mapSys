@@ -78,24 +78,19 @@ import UploadForm from "./uploadform.vue";
 // import Tile from "ol/Tile";
 
 const key = "39cf8c6b5e6e18abe0d8ce6b63edd2bd";
-// 矢量 第二个是注记  下同
+// 矢量 
 const vecUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=vec_c&x={x}&y={y}&l={z}&tk=" + key;
-const cvaUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=cva_c&x={x}&y={y}&l={z}&tk=" + key;
+  "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s,m&gl=CN&x={x}&y={y}&z={z}";
 // 卫星
 const imgUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=img_c&x={x}&y={y}&l={z}&tk=" + key;
-const ciaUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=cia_c&x={x}&y={y}&l={z}&tk=" + key;
+  "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s,m&gl=CN&x={x}&y={y}&z={z}";
 // 地形
 const terUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=ter_c&x={x}&y={y}&l={z}&tk=" + key;
-const ctaUrl =
-  "https://t0.tianditu.gov.cn/DataServer?T=cta_c&x={x}&y={y}&l={z}&tk=" + key;
+  "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=p,m&gl=CN&x={x}&y={y}&z={z}";
+
 
 export default {
-  name: "open-layer",
+  name: "mapHome",
   components: {
     BIcon,
     BIconMap,
@@ -107,11 +102,11 @@ export default {
     return {
       map: "",
       layer_vec: "",
-      layer_cva: "",
+
       layer_img: "",
-      layer_cia: "",
+
       layer_ter: "",
-      layer_cta: "",
+
       vecLayer_buffer: "",
       vectorLayer_centerLine: "",
       VectorLayer_centerLine_seg: "",
@@ -125,15 +120,12 @@ export default {
       this.loadVecLayer();
       this.map = new Map({
         layers: [
-          this.layer_vec,
-          this.layer_cva,
-          this.layer_img,
-          this.layer_cia,
-          this.layer_ter,
-          this.layer_cta,
-          // new TileLayer({
-          //   source: new OSM(),
-          // }),
+          // this.layer_vec,
+          // this.layer_img,
+          // this.layer_ter,
+          new TileLayer({
+            source: new OSM(),
+          }),
           this.vecLayer_buffer,
           // this.vectorLayer_centerLine_seg,
           this.vectorLayer_allLine_seg,
@@ -141,9 +133,9 @@ export default {
         ],
         target: "map",
         view: new View({
-          // center: ol.proj.transform([104.06, 30.67], 'EPSG:4326', 'EPSG:3857'),
-          center: olProj.transform([14.06, 30.67], "EPSG:4326", "EPSG:3857"),
-          zoom: 4,
+          center: olProj.transform([104.06, 30.67], 'EPSG:4326', 'EPSG:3857'),
+          // center: [104.10,30.72],
+          zoom: 6,
         }),
       });
     },
@@ -154,36 +146,21 @@ export default {
           url: vecUrl,
         }),
       });
-      this.layer_cva = new TileLayer({
-        name: "矢量图注记",
-        source: new XYZ({
-          url: cvaUrl,
-        }),
-      });
+
       this.layer_img = new TileLayer({
         name: "卫星图",
         source: new XYZ({
           url: imgUrl,
         }),
       });
-      this.layer_cia = new TileLayer({
-        name: "卫星图注记",
-        source: new XYZ({
-          url: ciaUrl,
-        }),
-      });
+
       this.layer_ter = new TileLayer({
         name: "地形图",
         source: new XYZ({
           url: terUrl,
         }),
       });
-      this.layer_cta = new TileLayer({
-        name: "地形图注记",
-        source: new XYZ({
-          url: ctaUrl,
-        }),
-      });
+
     },
     loadVecLayer() {
       this.clearGeoJSON();
@@ -251,25 +228,25 @@ export default {
       let main_basemap_type = type;
       if (main_basemap_type == "relief_map") {
         this.layer_ter.setVisible(true);
-        this.layer_cta.setVisible(true);
+
         this.layer_img.setVisible(false);
-        this.layer_cia.setVisible(false);
+
         this.layer_vec.setVisible(false);
-        this.layer_cva.setVisible(false);
+
       } else if (main_basemap_type == "image_map") {
         this.layer_ter.setVisible(false);
-        this.layer_cta.setVisible(false);
+
         this.layer_img.setVisible(true);
-        this.layer_cia.setVisible(true);
+    
         this.layer_vec.setVisible(false);
-        this.layer_cva.setVisible(false);
+     
       } else if (main_basemap_type == "vector_map") {
         this.layer_ter.setVisible(false);
-        this.layer_cta.setVisible(false);
+   
         this.layer_img.setVisible(false);
-        this.layer_cia.setVisible(false);
+  
         this.layer_vec.setVisible(true);
-        this.layer_cva.setVisible(true);
+ 
       }
     },
   },
@@ -277,11 +254,9 @@ export default {
   mounted() {
     this.initMap();
     this.layer_ter.setVisible(false);
-    this.layer_cta.setVisible(false);
     this.layer_img.setVisible(false);
-    this.layer_cia.setVisible(false);
     this.layer_vec.setVisible(true);
-    this.layer_cva.setVisible(true);
+
   },
 };
 </script>

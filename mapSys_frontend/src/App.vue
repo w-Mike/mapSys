@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <openlayer />
+    <map-home />
   </div>
 </template>
 
 <script>
-import openlayer from "./components/openlayer.vue";
+import MapHome from './components/mapHome.vue';
 
 export default {
   name: "App",
   components: {
-    openlayer,
+    MapHome,
   },
 };
 </script>
