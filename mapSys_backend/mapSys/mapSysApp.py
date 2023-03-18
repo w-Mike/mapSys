@@ -3,8 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from nanoid import generate
 
+from werkzeug.utils import secure_filename
+import os
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:2718@localhost:5432/webgisDB"
+app.config['UPLOAD_FOLDER'] = 'upload/'
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -20,12 +25,12 @@ class gisdocsModel(db.Model):
     dateTime = db.Column(db.String()) 
     location = db.Column(db.String()) 
 
-    def __init__(self, name, docClass, description, dateTime, location):
+    def __init__(self, name, docClass, description, dateTime, location,localpath):
         self.id = generate('1234567890abcdef', 10)
         self.name = name
         self.docClass = docClass
         self.description = description
-        self.localpath = "生成一个本地路径"
+        self.localpath = localpath
         self.webURL = "生成一个URL"
         self.dateTime = dateTime
         self.location = location
@@ -38,7 +43,11 @@ def handle_gisdocs():
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
-            new_gisdoc = gisdocsModel(name=data['name'], docClass=data['docClass'], description=data['description'], dateTime=data['dateTime'], location=data['location'])
+            file = data['file']
+            # localpath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+            # file.save(localpath)
+            localpath = "本地路径"
+            new_gisdoc = gisdocsModel(name=data['name'], docClass=data['docClass'], description=data['description'], dateTime=data['dateTime'], location=data['location'], localpath = localpath)
             db.session.add(new_gisdoc)
             db.session.commit()
             return {'message': f"doc {new_gisdoc.name} 成功被添加到数据库"}
@@ -48,6 +57,7 @@ def handle_gisdocs():
         gisdocs = gisdocsModel.query.all()
         results = [
             {
+              "id": doc.id,
               "name": doc.name,
               "docClass": doc.docClass,
               "description": doc.description,

@@ -8,3 +8,12 @@ export const postFile = data => {
     data
   })
 }
+
+// 获取文件信息
+export const reqFiles = ()=>{
+  return request({
+    method:'get',
+    url:'gisdocs',
+    
+  })
+}

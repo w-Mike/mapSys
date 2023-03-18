@@ -9,7 +9,7 @@ req.interceptors.request.use(
     console.log(config)
     return config
   },
-  error=>{
+  error => {
     return Promise.reject(error)
   }
 )

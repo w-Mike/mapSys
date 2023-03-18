@@ -1,13 +1,16 @@
 import Vue from 'vue'
 import App from './App.vue'
-import { BootstrapVue } from 'bootstrap-vue'
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+import store from '@/store'
+import router from '@/router'
+import dayjs from 'dayjs'
 
-Vue.use(BootstrapVue)
-// Vue.use(BootstrapVueIcons)
+import "@/utils/bootstrapimport"
+
 Vue.config.productionTip = false
+Vue.prototype.$store = store
+Vue.prototype.$dayjs = dayjs
 
 new Vue({
   render: h => h(App),
+  router,
 }).$mount('#app')
