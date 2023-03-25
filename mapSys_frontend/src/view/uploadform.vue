@@ -1,227 +1,159 @@
 <template>
-  <div class="upForm">
-    <b-form @submit="onSubmit" v-if="show" >
-      <b-form-group
-        class="formItem input1"
-        id="input-group-1"
-        label="数据类型:"
-        label-for="input-1"
-      >
-        <b-form-select
-          id="input-1"
-          v-model="form.fileClass"
-          :options="fileClass"
-          class="mb-3 select"
-        >
-          <!-- This slot appears above the options from 'options' prop -->
-          <template #first>
-            <b-form-select-option :value="null" disabled
-              >-- 选择一种文件类型 --</b-form-select-option
-            >
-          </template>
-        </b-form-select>
-      </b-form-group>
+  <div class="Container">
 
-      <!-- <b-form-file v-model="form.file" class="mt-3 fileSelect" plain required ></b-form-file> -->
-      <b-form-group
-        class="formItem input2"
-        id="input-group-2"
-        label="名称:"
-        label-for="input-2"
-      >
-        <b-form-input
-          id="input-2"
-          v-model="form.name"
-          placeholder="输入名称"
-          required
-        ></b-form-input>
-      </b-form-group>
+    <div class="showFiles">
+      <files></files>
+    </div>
 
-      <b-form-group
-        class="formItem input3"
-        id="input-group-3"
-        label="类别:"
-        label-for="input-3"
-      >
-        <b-form-input
-          id="input-3"
-          v-model="form.docClass"
-          placeholder="输入类别"
-          required
-        ></b-form-input>
-      </b-form-group>
+    <el-form class="formContent" ref="form" :model="form" label-width="80px">
+      <div class="selectDiv">
+        <el-form-item label="文件类型">
+          <el-select v-model="form.category" placeholder="请选择文件类型">
+            <el-option label="文档" value="doc"></el-option>
+            <el-option label="数据" value="data"></el-option>
+            <el-option label="样本" value="sample"></el-option>
+            <el-option label="算法" value="algorithm"></el-option>
+            <el-option label="案例" value="case"></el-option>
+            <!-- "文档", "数据", "样本", "算法", "案例" -->
+          </el-select>
+        </el-form-item>
 
-      <b-form-group
-        class="formItem input4"
-        id="input-group-4"
-        label="描述:"
-        label-for="input-4"
-        required
-      >
-        <b-form-textarea
-          id="input-4"
-          v-model="form.description"
-          placeholder="输入数据的描述信息"
-          rows="3"
-          max-rows="6"
-        ></b-form-textarea>
-      </b-form-group>
-
-      <b-form-group
-        class="formItem input5"
-        id="input-group-5"
-        label="选择日期:"
-        label-for="input-5"
-        required
-      >
-      <b-form-datepicker
-        id="input-5"
-        v-model="form.date"
-        class="mb-2"
-      ></b-form-datepicker>
-      </b-form-group>
-
-      <b-form-group
-        class="formItem input6"
-        id="input-group-6"
-        label="输入时间:"
-        label-for="input-6"
-      >
-        <b-form-input
-          id="input-6"
-          type="time"
-          v-model="form.time"
-          placeholder="输入"
-          required
-        ></b-form-input>
-      </b-form-group>
-
-      <div class="formItem">
-        <div class="form-buttons">
-          <b-button class="form-button1" type="submit" variant="primary">Submit</b-button>
-        </div>
+        <el-upload
+          class="upload-demo"
+          :on-change="fileChange">
+          <el-button type="success">点击上传</el-button>   <span>(小于1Mb)</span>
+        </el-upload>
       </div>
-    </b-form>
 
-    <b-alert
-      :show="dismissCountDown"
-      variant="success"
-      @dismissed="dismissCountDown=0"
-      class="alert"
-    >
-      <p>上传成功</p>
-    </b-alert>
+      <el-form-item label="文件名称">
+        <el-input v-model="form.name"></el-input>
+      </el-form-item>
+      <el-form-item label="文件描述">
+        <el-input type="textarea" v-model="form.description"></el-input>
+      </el-form-item>
 
-    <b-alert
-      :show="errordisMissedCount"
-      variant="danger"
-      @dismissed="errordisMissedCount=0"
-      class="alert"
-    >
-      <p>上传失败</p>
-    </b-alert>
+      <el-form-item label="创建时间">
+        <el-col :span="11">
+          <el-date-picker type="date" placeholder="选择日期" v-model="form.date" style="width: 100%;"></el-date-picker>
+        </el-col>
+        <el-col class="line" :span="2">
+          <p class="divider">-</p>
+        </el-col>
+        <el-col :span="11">
+          <el-time-picker placeholder="选择时间" v-model="form.time" style="width: 100%;"></el-time-picker>
+        </el-col>
+      </el-form-item>
+
+
+      <el-form-item class="buttonDiv">
+        <el-button type="primary" @click="onSubmit">提交</el-button>
+        <el-button type="warning" @click="onReset">重写</el-button>
+      </el-form-item>
+
+
+    </el-form>
 
   </div>
 </template>
 
 <script>
 import { postFile } from "@/utils/api";
-import { BIcon, BIconXSquare } from "bootstrap-vue";
+import Files from '@/components/files.vue'
 export default {
   components: {
-    BIcon,
-    BIconXSquare,
+    Files,
   },
   data() {
     return {
       form: {
-        name: "",
-        docClass: "",
-        description: "",
-        localpath: "",
-        date: "",
-        time:"",
-        location: "",
+        category: "",
 
+        name: "",
+        description: "",
+        date: "",
+        time: "",
         file: "",
-        fileClass: "null",
       },
-      fileClass: [
-        "文档",
-        "数据",
-        "样本",
-        "算法",
-        "案例",
-      ],
+ 
       show: true,
-      dismissCountDown:0,
-      errordisMissedCount:0
+      dismissCountDown: 0,
+      errordisMissedCount: 0,
     };
   },
   methods: {
+    fileChange(event) {
+      this.form.file = event.target.files[0];
+    },
     onSubmit(event) {
       event.preventDefault();
-      let result = this.form
-      result.dateTime = this.form.date + " " + this.form.time
-      // alert(JSON.stringify(this.form));
-      postFile(result).then(
-        response=>{console.log(response)
-        this.dismissCountDown = 3
-        // reset()
-      }).catch(error=>{
-        console.log(error)
-        this.errordisMissedCount = 3        
-      })
+      this.form.dateTime = this.form.date + " " + this.form.time;
+      let formData = new FormData();
+      let keys = Object.keys(this.form);
+      keys.forEach((key) => {
+        if (key !== "date" && key !== "time") {
+          formData.append(key, this.form[key]);
+        }
+      });
+      let config = {
+        headers: {},
+      };
+      postFile(formData).then(
+        (res) => {
+          console.log(res);
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
     },
-    reset(){
+    reset() {
       this.form = {
         name: "",
         docClass: "",
         description: "",
         localpath: "",
         date: "",
-        time:"",
+        time: "",
         location: "",
 
         file: [],
         fileClass: "null",
-      }
-    }
+      };
+    },
   },
 };
 </script>
 
-<style>
-.closeButt {
-  position: absolute;
-  right: 2.2em;
-  top: 1em;
+<style lang="scss">
+.Container{
+  position: relative;
+  display: flex;
+  width: 60%;
+  height: 100%;
+  overflow-y: scroll;
+}
+.formContent{
+  width: 40%;
+  margin: 0;
+  height: 100%;
+  padding: 50px;
+  box-sizing: border-box;
+  padding-top: 10%;
+  position: fixed;
+  right: 0%;
+  .selectDiv{
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
-.form-buttons button{
-  margin-top: 1em;
-  margin-left: 2em;
-  float:right;
+.showFiles{
+  width: 60%;
+  height: 100%;
 }
-.select{
-  width: 100%;
-  height: 2em;
-  border: solid grey 1px;
-}
-.formItem{
-  width: 70%;
-  margin: 1em auto
-}
-.alert{
-  position: fixed;
-  top:10%;
-  z-index: 3;
-  width: 10%;
-  height: 60px;
-  margin: 0 auto;
-  text-align: center;
-}
-.fileSelect{
-  margin-left:15%;
+
+.buttonDiv{
+  display: flex;
+  flex-direction: row-reverse;
 }
 </style>

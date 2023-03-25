@@ -1,24 +1,20 @@
 import VueRouter from 'vue-router'
 import Vue from 'vue'
-import Files from '@/view/files'
 import UploadForm from "@/view/uploadform"
+import MapContent from "@/view/mapContent"
 Vue.use(VueRouter)
 
 const routes = [
+  {
+    name:'home',
+    path:'/',
+    component:MapContent
+  },
   {
     name:'upload',
     path:'/upload',
     component:UploadForm
   },
-  {
-    name:'files',
-    path:'/files',
-    component:Files,
-  },
-  {
-    name:'map',
-    path:'/',
-  }
 ]
 const router =  new VueRouter({
   routes,

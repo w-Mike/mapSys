@@ -1,62 +1,63 @@
 <template>
-  <div id="app" >
-    <div class="maincontent">
-      <nav-bar></nav-bar>
-      <map-content class="map"></map-content>  
-      <router-view class="routerview"></router-view>
+  <div id="app">
+
+    <div class="container">
+      <nav-bar class="header"></nav-bar>
+      <router-view class="content"></router-view>
     </div>
-    <!-- <upload-form
-        class="upForm" 
-        v-if="store.formFlag"
-    ></upload-form> -->
+
+
   </div>
 </template>
 
 <script>
-import NavBar from '@/components/navBar.vue'
-import MapContent from "@/components/mapContent.vue"
+import NavBar from "@/components/navBar.vue";
+import tab from "@/components/tab.vue";
 
 export default {
-  name:'App',
-  components:{
+  name: "App",
+  components: {
     NavBar,
-    MapContent
+    tab,
   },
-  data(){
-    return{
-    }
+  data() {
+    return {
+      isShowTab: false,
+    };
   },
-
+  mounted() {
+    this.$eventBus.$on("showTab", () => {
+      this.isShowTab = !this.isShowTab;
+    });
+  },
 };
 </script>
 
 <style lang="scss" scoped>
 * {
   --main-bg-color: rgb(42, 154, 230);
-  margin: 0;
 }
-.map {
+#app{
   width: 100%;
-  height: 100%;
-  position: relative;
+  height: auto
 }
-.maincontent {
-  position: relative;
+// 整体布局
+.container {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   width: 100%;
-  height: 935px;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
-.routerview {
-  position: absolute;
-  top: 56px;
-  width: 100%; 
-  height: 935px;
-  background-color: #fff;
-  padding: 2em;
-  padding-top: 2em;
-  z-index: 2;
+
+.container .header{
+  height: 60px;
+}
+.container .content{
+  width: 100%;
+  margin: 0;
+  flex: 1;
 }
 
 </style>

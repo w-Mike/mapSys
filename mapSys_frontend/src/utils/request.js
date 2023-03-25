@@ -1,12 +1,12 @@
 import axios from "axios"
 
-const req =  axios.create({
+const request = axios.create({
   baseURL: '/api',
   timeout: 2000,
 })
-req.interceptors.request.use(
-  config=>{
-    console.log(config)
+request.interceptors.request.use(
+  config => {
+    // console.log(config)
     return config
   },
   error => {
@@ -14,4 +14,18 @@ req.interceptors.request.use(
   }
 )
 
-export default req
+const reqFile = axios.create({
+  baseURL: '/api',
+  timeout: 5000,
+  headers: {  'Content-Type' : 'multipart/form-data' },
+
+})
+
+reqFile.interceptors.request.use(config => {
+  // console.log(config)
+  return config
+}, error => {
+  return Promise.reject(error)
+})
+
+export { reqFile, request }

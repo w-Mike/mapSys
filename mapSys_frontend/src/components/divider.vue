@@ -17,13 +17,14 @@ export default {
   display: block;
   height: 1px;
   width: 100%;
+  margin: 5% auto;
   font-size: 14px;
   font-variant: tabular-nums;
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.65);
   box-sizing: border-box;
   list-style: none;
-  background: #e8e8e8;
+  background: #e4dfdf;
 }
 </style>
 
