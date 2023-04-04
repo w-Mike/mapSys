@@ -3,7 +3,9 @@
 
     <div class="container">
       <nav-bar class="header"></nav-bar>
-      <router-view class="content"></router-view>
+      <keep-alive include="home">
+        <router-view class="content"></router-view>
+      </keep-alive>
     </div>
 
 

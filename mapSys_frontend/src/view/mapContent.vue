@@ -1,34 +1,137 @@
 <template>
   <div>
+    <el-menu class="navMenu el-menu-vertical-demo"  :collapse="true">
+      <el-menu-item index="1" @click="$router.push({'name':'upload'})">
+        <i class="el-icon-document"></i>
+        <span slot="title">文件</span>
+      </el-menu-item>
+
+      <el-menu-item index="2" @click="sysMode = 'none'">
+        <i class="el-icon-guide"></i>
+        <span slot="title">设施</span>
+      </el-menu-item>
+
+      <el-menu-item index="3" @click="sysMode = 'edit'">
+        <i class="el-icon-edit"></i>
+        <span slot="title">添加设施</span>
+      </el-menu-item>
+
+      <el-menu-item index="4" @click="sysMode = 'corre'">
+        <i class="el-icon-connection"></i>
+        <span slot="title">添加关联</span>
+      </el-menu-item>
+    </el-menu>
+
     <div id="map"></div>
 
-    <div class="menu" :class="isShowTab? 'menuShow':'menuHidden'">
+    <div class="toggleLayer menuToggle" :class="isShowTab ? 'menuShow' : 'menuHidden'"  @click="showTab">
+      <img src="@/assets/layers.svg" alt="layers" />
+    </div>
+
+    <div class="menu menuZoom" :class="isShowTab ? 'menuShow' : 'menuHidden'">
       <div class="menuItem" @click="zoomIn">
         <p>+</p>
       </div>
       <div class="menuItem" @click="zoomOut">
         <p>-</p>
       </div>
-      <div class="menuItem" @click="showTab">
-        <img src="@/assets/layers.svg" alt="layers" >
-      </div>
     </div>
 
-    <tab class="tab" v-show="isShowTab" :class="isShowTab ? 'tabShow' : 'tabHidden'"></tab>
+    <tab
+      class="tab"
+      v-show="isShowTab"
+      :class="isShowTab ? 'tabShow' : 'tabHidden'"
+    ></tab>
+
+    <div id="mouse-position" class="coor"></div>
+
+    <div class="modeDiv editDiv" v-if="sysMode == 'edit'" >
+      <el-select v-model="editType" placeholder="请选择">
+        <el-option
+          label="点要素"
+          value="Point">
+        </el-option>
+        <el-option
+          label="线要素"
+          value="LineString">
+        </el-option>
+        <el-option
+          label="面要素"
+          value="Polygon">
+        </el-option>
+      </el-select>
+      <el-button-group class="btns">
+        <el-button icon="el-icon-edit" @click="drawFeature"></el-button>
+        <el-button icon="el-icon-refresh-left" @click="undoFeature"></el-button>
+        <!-- <el-button icon="el-icon-delete" @click="dltFeature" :disabled="isDrawing"></el-button> -->
+        <!-- <el-button type="primary" icon="el-icon-upload2" @click="uploadFeature" ></el-button> -->
+      </el-button-group>
+    </div>
+
+    <div class="modeDiv correDiv" v-if="sysMode == 'corre'">
+      <el-select placeholder="请选择要关联的设施">
+        <el-option
+          label="点要素"
+          value="Point">
+        </el-option>
+      </el-select>
+      <el-button-group class="btns">
+        <el-button icon="el-icon-mouse" @click="chooseFeatures">选择路段</el-button>
+        <el-button type="primary" icon="el-icon-connection" @click="makeCorre">关联设施</el-button>
+      </el-button-group>
+    </div>
+
+
+    <div class="upfeatureForm" v-if="upfeatureForm">
+      <el-form class="formContent" ref="form" :model="featureForm" :action="onfeatureSubmit" label-width="80px">
+        <!-- id  设施名  设施描述  设施类别  要素类别  几何要素 -->
+
+        <el-form-item label="设施名">
+          <el-input v-model="featureForm.faciname"></el-input>
+        </el-form-item>
+
+        <el-form-item label="设施描述">
+          <el-input v-model="featureForm.facidesc"></el-input>
+        </el-form-item>
+
+        <el-form-item label="设施类别">
+          <el-select v-model="featureForm.facitype">
+            <el-option v-for="(type,index) in faciType" :label="type" :value="type" :key="index"></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <div class="formbtns">
+          <el-button @click="dltFeature">取消</el-button>
+          <el-button type="primary" @click="onfeatureSubmit">提交</el-button>
+        </div>
+
+      </el-form>
+    </div>
   </div>
 </template>
 <script>
+import tab from "@/components/tab.vue";
+import {request} from '@/utils/request'
+import {postFeature} from "@/utils/api"
+
+// 引入openlayer的包
 import Map from "ol/Map.js";
 import TileLayer from "ol/layer/Tile.js";
 import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
-
-import * as olProj from "ol/proj";
-import { Fill,  Style } from "ol/style";
+import { Fill, Style, Stroke } from "ol/style";
 import View from "ol/View.js";
+import WKB from "ol/format/WKB.js";
 import XYZ from "ol/source/XYZ";
-import tab from '@/components/tab.vue'
+import MousePosition from "ol/control/MousePosition.js";
+import { createStringXY } from "ol/coordinate.js";
+import { defaults as defaultControls } from "ol/control.js";
+import WKT from 'ol/format/WKT.js';
+import {Draw, Modify, Snap, Select} from 'ol/interaction.js';
+import {get} from "ol/proj";
+
+
 
 // 矢量 卫星 地形
 const vecUrl = "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=m&gl=CN&x={x}&y={y}&z={z}";
@@ -38,32 +141,170 @@ const terUrl = "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=p,m&gl=CN&x={x}&y={
 export default {
   name: "mapHome",
   components: {
-    tab
+    tab,
   },
   data() {
     return {
-      map:null,
+      featureForm:{
+        faciname:"",
+        facidesc:"",
+        facitype:"",
+        featuretype:"",
+        geom:"",
+      },
+      facilitiesName:[],
+      faciType:[
+        "路基","隧道","桥梁","轨道",
+        "车站","信号设备","通信设备",
+        "安全监控设备","检测设备","自然灾害预报与防治设备",
+      ],
+
+      map: null,
       tileLayer_vec: null,
       tileLayer_img: null,
       tileLayer_ter: null,
+      vecLayer_buffer: {},
+      vecLayer_line_segs: {},
+      vecLayer_facilities:{},
 
-      vecLayer_buffer: null,
-      vectorLayer_centerLine: null,
-      VectorLayer_centerLine_seg: null,
-      vectorLayer_allLine_seg: null,
+      lineSegFeatures: {},
+      facilityFeatures:{},
 
-      isShowTab:false
+
+      isShowTab: false,
+
+      select: null,
+      mousePositionControl: null,
+
+      addSegLayersFlag: false,
+      loading:null,
+
+
+      editVecSource:null,
+      editVecLayer:null,
+      draw:null,      
+      drawingFeature:null,
+      editType:'Point',
+      editBtnText:"编辑",
+      isDrawing:false,
+
+      sysMode:'none',
+      upfeatureForm:false,
     };
   },
   mounted() {
-    this.initMap(); 
-    this.changeBasemap('vector_map')
-
-    this.$eventBus.$on('chgTileMap', (mapType) => this.changeBasemap(mapType))
-    this.$eventBus.$on('showTab', () => {this.isShowTab= !this.isShowTab})
+    this.$eventBus.$on("chgTileMap", (mapType) => this.changeBasemap(mapType));
+    this.$eventBus.$on("showTab", () => this.isShowTab = !this.isShowTab);
+    this.$eventBus.$on("chgVecLayer", (vecLayerList)=>{
+      let vecLayermapping = {
+        "缓冲区矢量图层":this.vecLayer_buffer,
+        "设施矢量图层":this.vecLayer_facilities,
+        // "路段矢量图层":this.vecLayer_line_segs,
+      }
+      for(let key in vecLayermapping){
+        if(vecLayermapping.hasOwnProperty(key)){
+          vecLayerList.includes(key)? 
+          vecLayermapping[key].setVisible(true) : vecLayermapping[key].setVisible(false)
+        }
+      }
+    })
+    this.initMap();
+  },
+  watch:{
+    editType:{
+      handler(){
+        this.isDrawing=false
+      }
+    },
+    isDrawing:{
+      handler(newVal, oldVal){
+        if(!newVal){
+          this.map.removeInteraction(this.draw);
+          this.draw = null;
+        }
+      }
+    }
   },
   methods: {
+    onfeatureSubmit(){
+      let strwkt = new WKT().writeFeature(this.drawingFeature, {
+        dataProjection: "EPSG:4326",  
+        featureProjection: "EPSG:3857",
+      });
+      this.featureForm.geom = strwkt
+      this.featureForm.featuretype = this.drawingFeature.getGeometry().getType()
 
+      postFeature(this.featureForm).then(res=>{
+        console.log(res)
+        this.$message({message:'设施成功上传至数据库', type:'success'});
+        this.upfeatureForm = false
+      }).catch(error=>{
+        console.log(error)
+        this.$message({message:'设施添加失败，终端查看错误信息', type:'error'});
+      })
+
+    },
+    drawFeature(){
+      this.isDrawing = !this.isDrawing
+      if(this.isDrawing){
+        this.draw = new Draw({
+          source: this.editVecSource,
+          type: this.editType,
+        });
+        this.map.addInteraction(this.draw);
+      // 绘制完成
+        this.draw.on("drawend", e => {
+          this.drawingFeature =  e.feature
+          this.map.removeInteraction(this.draw);
+  
+          this.featureForm.geom = new WKT().writeFeature(this.drawingFeature, {
+            dataProjection: "EPSG:4326",  
+            featureProjection: "EPSG:3857",
+          });
+          console.log(this.featureForm.geom)
+          this.draw = null;
+          this.isDrawing = false
+          this.upfeatureForm=true
+        });
+      }
+    },
+    undoFeature(){
+      if(this.draw){
+        this.draw.removeLastPoint();
+      }
+    },
+    dltFeature(){
+      this.editVecSource.removeFeature(this.drawingFeature)
+      console.log(this.editVecSource.getFeatures())
+      this.upfeatureForm =false
+    },
+    lineSegs_wkbHandler(lineSegments) {
+      return lineSegments.map((wkbItem) => {
+        const format = new WKB();
+        let feature = format.readFeature(wkbItem.geom, {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857",
+        });
+        feature.setId(wkbItem.gid);
+        feature.set("length", wkbItem["shape_leng"]);
+        return feature;
+      });
+    },
+    faci_wkbHandler(facilities){
+      return facilities.map((faci) => {
+        const format = new WKB()
+        let feature = format.readFeature(
+          faci.geom, {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857",}
+        )
+        feature.setId(faci.fid);
+        feature.set('faciname', faci.faciname)
+        feature.set("facitype", faci.facitype)
+        feature.set("facidesc", faci.facidesc)
+        return feature
+      })
+    },
     zoomOut() {
       const view = this.map.getView();
       const zoom = view.getZoom();
@@ -90,24 +331,109 @@ export default {
         this.tileLayer_vec.setVisible(true);
       }
     },
-    showTab(){
-      this.$eventBus.$emit('showTab')      
+    showTab() {
+      this.$eventBus.$emit("showTab");
     },
-    initMap() {
+    funcConfig(){
+      this.loading = this.$loading.service({
+          lock: true,
+          text: '绘制矢量数据中',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+      });
+      this.mousePositionControl = new MousePosition({
+        coordinateFormat: createStringXY(4),
+        projection: "EPSG:4326",
+        target: document.getElementById("mouse-position"),
+      });
+    },
+    loadEditLayer(){
+      this.editVecSource = new VectorSource({wrapX:false})
+      this.editVecLayer = new VectorLayer({source:this.editVecSource})
+    },
+
+    // createVecLayer(config){
+    //   // config: source(features)  style
+    //   return new VectorLayer({
+    //     source: new VectorSource({
+    //       features:config.features,
+    //     }),
+    //     style: config.style
+    //   })
+    // },
+    async initMap() {
+
+      // 加载图层， 设置鼠标坐标
       this.loadTileLayer();
       this.loadVecLayer();
+      this.funcConfig()
+      this.loadEditLayer()
+      if(this.addSegLayersFlag){
+        let res = await request.get('/splitline')
+        this.lineSegFeatures = this.lineSegs_wkbHandler(res.data);
+        this.vecLayer_line_segs = new VectorLayer({
+          source: new VectorSource({
+            features: this.lineSegFeatures,
+          }),
+          style: new Style({
+            stroke: new Stroke({
+              color: "rgb(254, 255, 134)",
+              width: 3,
+              lineCap: "round",
+              lineJoin: "round",
+            }),
+          }),
+        })
+      }
+
+      let facilitiesRes = await request.get('/facilities')
+
+      this.facilityFeatures = this.faci_wkbHandler(facilitiesRes.data);
+      // console.log(facilityFeatures)
+      this.vecLayer_facilities = new VectorLayer({
+        source: new VectorSource({
+          features: this.facilityFeatures,
+          style: new Style({
+            fill: new Fill({
+              color: "rgb(12, 32, 134)",
+            }),
+            stroke: new Stroke({
+              color: "rgb(254, 255, 134)",
+              width: 3,
+              lineCap: "round",
+              lineJoin: "round",
+            }),
+          }),
+        })
+      })
+
+
+
       this.map = new Map({
         layers: [
           this.tileLayer_vec,
           this.tileLayer_img,
           this.tileLayer_ter,
+
+          this.vecLayer_buffer,
+          this.vecLayer_facilities,
+
+          this.editVecLayer
         ],
         target: "map",
         view: new View({
-          center: olProj.transform([104.06, 30.67], "EPSG:4326", "EPSG:3857"),
-          zoom: 6,
+          center: [10895116, 3563181],
+          zoom: 7,
         }),
+        controls: defaultControls().extend([this.mousePositionControl]),
       });
+
+      if(this.addSegLayersFlag){
+        this.map.addLayer(this.vecLayer_line_segs)
+      }
+
+      this.changeBasemap("vector_map");
+      this.loading.close()
     },
     loadTileLayer() {
       this.tileLayer_vec = new TileLayer({
@@ -134,29 +460,31 @@ export default {
     loadVecLayer() {
       this.vecLayer_buffer = new VectorLayer({
         source: new VectorSource({
-          url: "https://geo.datav.aliyun.com/areas_v3/bound/510000_full.json",
-          // url: "./Data/缓冲区50km.json",
+          url: "./data/buff50km.json",
           format: new GeoJSON(),
         }),
         style: new Style({
           fill: new Fill({
-            color: "rgba(255, 0, 0, 0.8)",
+            color: "rgba(165, 215, 232, 0.7)",
+          }),
+          stroke: new Stroke({
+            color: "rgb(87, 108, 188)",
+            width: 1,
           }),
         }),
-      });
+      })
     },
   },
-
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang='scss'>
+<style lang="scss">
 * {
   --main-bg-color: rgb(42, 154, 230);
   margin: 0;
 }
-#map{
+#map {
   width: 100%;
   height: 661px;
 }
@@ -173,50 +501,53 @@ export default {
   font-size: 1.5rem;
   padding: 0.1em 0.5em;
 }
-.ol-zoom{
+.ol-zoom {
   visibility: hidden;
 }
-.ol-rotate{
+.ol-rotate {
   visibility: hidden;
 }
 
-.menu{
+.menu {
   width: 40px;
   position: absolute;
-  top:30%;
   right: 0%;
-  div{
+  div {
     display: flex;
     align-items: center;
     height: 40px;
     color: white;
     text-align: center;
     opacity: 60%;
-    background-color:black;
+    background-color: black;
   }
-  p{
+  p {
     font-size: 27px;
     margin: 0 auto;
   }
-  div:hover{
+  div:hover {
     background-color: rgb(9, 139, 9);
     opacity: 100%;
   }
-  img{
-    margin:0 auto;
+  img {
+    margin: 0 auto;
   }
-  div:first-child{
+  div:first-child {
     border-top-left-radius: 15%;
   }
-  div:last-child{
+  div:last-child {
     border-bottom-left-radius: 15%;
   }
 }
+.menuZoom{
+  top: 80%;
+}
 
-.menuShow{
+
+.menuShow {
   right: 20%;
 }
-.menuHidden{
+.menuHidden {
   right: 0%;
 }
 
@@ -235,5 +566,84 @@ export default {
 }
 .tabHidden {
   left: 80%;
+}
+.coor {
+  position: absolute;
+  width: auto;
+  height: 20px;
+  left: 45%;
+  bottom: 1%;
+  border: 1px solid white;
+  border-radius: 15px;
+  text-align: center;
+  padding: 5px;
+  background-color: rgba(219, 228, 198, 0.7);
+  color: rgb(64, 81, 59);
+}
+
+.toggleLayer{
+  width: 40px;
+  height: 40px;
+
+  position: absolute;
+  top: 20%;
+  display: flex;
+
+  background-color: black;
+  opacity: 60%;
+  border-top-left-radius: 15%;
+  border-bottom-left-radius: 15%;
+
+  img{
+    margin: auto;
+  }
+}
+
+.toggleLayer:hover{
+  background-color: rgb(9, 139, 9);
+  opacity: 100%;
+}
+
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  width: 200px;
+  min-height: 400px;
+}
+
+.modeDiv{
+  position: absolute;
+  top: 10%;
+  display: flex;
+}
+.btns{
+  margin-left: 10px;
+}
+
+.correDiv{
+  left: 35%;
+}
+
+.editDiv{
+  left: 40%;
+}
+
+.upfeatureForm{
+  width: 30%;
+  height: 45%;
+  position: absolute;
+  top: 27%;
+  left: 35%;
+  background-color: #fff;
+  display: flex;
+  padding-top: 30px;
+  
+  .formContent{
+    margin: 0;
+    position:relative;
+    flex-grow: 1;
+  }
+  .formbtns{
+    display: flex;
+    justify-content: right;
+  }
 }
 </style>

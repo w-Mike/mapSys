@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="list">
-      <div  v-for="file in files" :key="file.id" class="fileRow">
+      <div v-for="file in files" :key="file.id" class="fileRow" >
         <div class="content">
           
           <div>
             <router-link :to="{}">
               <span>{{ file.name }}</span>
             </router-link>
-            <el-tag class="elTag" type="success">{{ file.name }}</el-tag>
+            <el-tag class="elTag" type="success">{{ file.category }}</el-tag>
           </div>
         
           <div>
@@ -29,16 +29,14 @@ import divider from "@/components/divider.vue";
 import { reqFiles } from "@/utils/api";
 export default {
   name: "files",
+  props:['files'],
   data() {
     return {
-      files: "",
+
     };
   },
   created() {
-    reqFiles().then((response) => {
-      this.files = response.data.gisdocs;
-      // console.log(response.data.gisdocs);
-    });
+
   },
   components: {
     divider,

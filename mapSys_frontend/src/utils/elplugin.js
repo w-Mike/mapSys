@@ -11,7 +11,15 @@ import {
   Row,
   Col,
   Upload,
-  Tag
+  Tag,
+  Menu,
+  Submenu,
+  MenuItem,
+  MenuItemGroup,
+  ButtonGroup,
+  CheckboxGroup,
+  Checkbox
+  
 } from 'element-ui'
 
 export default {
@@ -28,7 +36,13 @@ export default {
     Vue.use(OptionGroup)
     Vue.use(Row),
     Vue.use(Col),
-    Vue.use(Tag)
+    Vue.use(Tag),
+    Vue.use(Menu),
+    Vue.use(MenuItem),
+    Vue.use(Submenu),
+    Vue.use(MenuItemGroup),
+    Vue.use(ButtonGroup),
+    Vue.use(CheckboxGroup),
+    Vue.use(Checkbox)
   }
 }
-

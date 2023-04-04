@@ -14,7 +14,12 @@
     </div>
     <divider class="divider"></divider>
     <div class="vecMap">
-      <h5>矢量地图</h5>
+      <h5>矢量图层</h5>
+      <el-checkbox-group v-model="vecLayerList" @change="onChange" class="checkboxes">
+        <el-checkbox class="checkbox" label="缓冲区矢量图层"></el-checkbox>
+        <el-checkbox class="checkbox" label="设施矢量图层"></el-checkbox>
+        <el-checkbox class="checkbox" label="路段矢量图层"></el-checkbox>
+      </el-checkbox-group>
     </div>
   </div>
 </template>
@@ -29,9 +34,14 @@ export default {
   data(){
     return{
 
+      vecLayerList:["缓冲区矢量图层","设施矢量图层","路段矢量图层"],
     }
   },
   methods:{
+    onChange(){
+      console.log(this.vecLayerList)
+      this.$eventBus.$emit("chgVecLayer", this.vecLayerList)
+    },
     changeBasemap(mapType) {
       this.$eventBus.$emit("chgTileMap", mapType);
     },
@@ -82,5 +92,12 @@ export default {
 }
 .outter{
   padding: 20px;
+}
+.checkboxes{
+  display: flex;
+  flex-direction: column;
+}
+.checkboxes .checkbox{
+  margin: 5px;
 }
 </style>

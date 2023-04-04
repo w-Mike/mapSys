@@ -2,10 +2,10 @@
   <div class="Container">
 
     <div class="showFiles">
-      <files></files>
+      <files :files="files" v-loading="isloading"></files>
     </div>
 
-    <el-form class="formContent" ref="form" :model="form" label-width="80px">
+    <el-form class="formContent" ref="form" :model="form" :action="onSubmit" label-width="80px">
       <div class="selectDiv">
         <el-form-item label="文件类型">
           <el-select v-model="form.category" placeholder="请选择文件类型">
@@ -18,11 +18,6 @@
           </el-select>
         </el-form-item>
 
-        <el-upload
-          class="upload-demo"
-          :on-change="fileChange">
-          <el-button type="success">点击上传</el-button>   <span>(小于1Mb)</span>
-        </el-upload>
       </div>
 
       <el-form-item label="文件名称">
@@ -44,20 +39,32 @@
         </el-col>
       </el-form-item>
 
-
-      <el-form-item class="buttonDiv">
-        <el-button type="primary" @click="onSubmit">提交</el-button>
-        <el-button type="warning" @click="onReset">重写</el-button>
+      <el-form-item label="文件上传">
+        <el-upload
+          action=""
+          :before-remove="beforeRemove"
+          :on-remove="handleRemove"
+          :multiple="false" 
+          :limit="1"
+          :on-change="fileChange"
+          :file-list="fileList"
+          :auto-upload="false"
+          >
+          <el-button type="success">选择文件</el-button>   <span>(小于1Mb)</span>
+       </el-upload>
       </el-form-item>
-
-
+      <el-form-item class="buttonDiv">
+        <el-button type="warning" @click="onReset">重写</el-button>
+        <el-button type="primary" @click="onSubmit">提交</el-button>
+      </el-form-item>
     </el-form>
+
 
   </div>
 </template>
 
 <script>
-import { postFile } from "@/utils/api";
+import { postFile, reqFiles } from "@/utils/api";
 import Files from '@/components/files.vue'
 export default {
   components: {
@@ -74,18 +81,25 @@ export default {
         time: "",
         file: "",
       },
- 
+      
+      fileList:[],
       show: true,
       dismissCountDown: 0,
       errordisMissedCount: 0,
+
+      files:'',
+      isloading:true,
     };
   },
   methods: {
-    fileChange(event) {
-      this.form.file = event.target.files[0];
+    fileChange(file,fileList) {
+      this.form.file = file.raw
+      console.log(this.form.file)
     },
     onSubmit(event) {
       event.preventDefault();
+      this.form.date = this.$dayjs(this.form.date).format("YYYY-MM-DD")
+      this.form.time = this.$dayjs(this.form.time).format("HH:mm:ss")
       this.form.dateTime = this.form.date + " " + this.form.time;
       let formData = new FormData();
       let keys = Object.keys(this.form);
@@ -94,32 +108,59 @@ export default {
           formData.append(key, this.form[key]);
         }
       });
-      let config = {
-        headers: {},
-      };
       postFile(formData).then(
         (res) => {
+          this.$message({message:'上传成功', type:'success'});
           console.log(res);
+          this.onReset()
+          this.getFiles()
         },
         (error) => {
+          this.$message({message:'上传失败', type:'error'});
           console.log(error);
         }
       );
     },
-    reset() {
+    onReset() {
       this.form = {
+        category: "",
+
         name: "",
-        docClass: "",
         description: "",
-        localpath: "",
         date: "",
         time: "",
-        location: "",
-
-        file: [],
-        fileClass: "null",
+        file: "",
       };
+      this.fileList = []
     },
+    beforeRemove(file, fileList){
+      return this.$confirm(`确定移除 ${ file.name }？`);
+    },
+    handleRemove(file, fileList){
+      console.log(file)
+      console.log(fileList)
+    },
+    chooseFile(params){
+      console.log("调用了chooseFIle")
+      console.log(params)
+      this.form.file = params.file!==null ? params.file.raw : null
+    },
+    getFiles(){
+      reqFiles().then((response) => {
+        this.isloading=false
+        this.files = response.data.gisdocs;
+        // console.log(response.data.gisdocs);
+      }).catch(error=>{
+        this.$message({message:'读取文件失败，请检查网络', type:'error'});
+        this.isloading=false
+      });
+    },
+    startLoading(){
+
+    }
+  },
+  created() {
+    this.getFiles()
   },
 };
 </script>
@@ -138,7 +179,7 @@ export default {
   height: 100%;
   padding: 50px;
   box-sizing: border-box;
-  padding-top: 10%;
+  padding-top: 6%;
   position: fixed;
   right: 0%;
   .selectDiv{
@@ -154,6 +195,7 @@ export default {
 
 .buttonDiv{
   display: flex;
+  margin-top: 60px;
   flex-direction: row-reverse;
 }
 </style>
