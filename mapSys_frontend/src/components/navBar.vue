@@ -4,7 +4,7 @@
 
       <div class="title">
         <img class="sysIcon" src="@/assets/sysIcon.svg" alt=""> 
-        <p class="SysName" @click="backHome">WebGIS数据管理系统 </p>
+        <p class="SysName" @click="backHome">基于WebGIS的线状工程多源异构数据管理系统 </p>
       </div>
 
       <div class="navItems">

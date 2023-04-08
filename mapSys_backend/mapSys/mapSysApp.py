@@ -84,7 +84,8 @@ class facilitiesModel(db.Model):
   geom = db.Column(Geometry)
 
   def __init__(self, data):
-    self.fid = generate('1234567890', 10)
+    # self.fid = generate('1234567890', 10)
+    self.fid = data['fid']
     self.faciname = data['faciname']
     self.geom = data['geom']
     self.facitype = data['facitype']
@@ -176,3 +177,7 @@ def handle_facilities():
     db.session.add(new_facility)
     db.session.commit()
     return {'message': f"doc {new_facility.faciname} 成功被添加到数据库"}
+
+@app.route('/corre', methods=['POST'])
+def handle_corre():
+   return {'message': "访问corre"}

@@ -1,19 +1,11 @@
 ## 前端
 
----
+1. 通过将线路中线加宽，实现关联功能。
+2. 文件与路段的关联，通过设施路段关联表，获取某个设施关联的所有路段，文件表单添加一项选择路段的select。 
 
 ## 后端
 
-运行服务器：
 
-1. powershell 添加环境变量: `$env:FLASK_APP = "mapSysApp.py"`
-2. `flask run`
 
-对数据表的列有更改就需要运行
-
-```
-$ flask db migrate
-$ flask db upgrade
-
-"{"name":"161","docClass":"1556","description":"1565","localpath":"","date":"2023-03-27","time":"12:03","location":"",
-"file":{"$path":""},"fileClass":"文档","dateTime":"2023-03-27 12:03"}"
+## 数据库
+1. 将路段表添加一个字段，就是路段名称，格式为`K$(公里数)+$(百米数)`，例如一个id为129的路段，里程就是12,900。所以其名称就是 "K12+9"
