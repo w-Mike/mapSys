@@ -1,116 +1,116 @@
 <template>
-  <div>
-    <el-menu class="navMenu el-menu-vertical-demo"  :collapse="true">
-      <el-menu-item index="1" @click="$router.push({'name':'upload'})">
-        <i class="el-icon-document"></i>
-        <span slot="title">文件</span>
-      </el-menu-item>
+  <div class="container">
+    <div class="left">
+      <el-menu class="navMenu el-menu-vertical-demo" style="background-color:#faf8f1"  :collapse="true">
+        <el-menu-item index="1" @click="$router.push({'name':'docs'})">
+          <i class="el-icon-document"></i>
+          <span slot="title">文件</span>
+        </el-menu-item>
 
-      <el-menu-item index="2" @click="sysMode = 'none'">
-        <i class="el-icon-guide"></i>
-        <span slot="title">设施</span>
-      </el-menu-item>
+        <el-menu-item index="2" @click="sysMode = 'none'">
+          <i class="el-icon-guide"></i>
+          <span slot="title">设施</span>
+        </el-menu-item>
 
-      <el-menu-item index="3" @click="sysMode = 'edit'">
-        <i class="el-icon-edit"></i>
-        <span slot="title">添加设施</span>
-      </el-menu-item>
+        <el-menu-item index="3" @click="sysMode = 'edit'">
+          <i class="el-icon-edit"></i>
+          <span slot="title">添加设施</span>
+        </el-menu-item>
 
-      <el-menu-item index="4" @click="()=>{sysMode = 'corre'; isDrawing = false;}" >
-        <i class="el-icon-connection"></i>
-        <span slot="title">添加关联</span>
-      </el-menu-item>
-    </el-menu>
-
-
-    <div id="map"></div>
-
-    <div id="mouse-position" class="coor"></div>
-
-    <!-- 右侧菜单 -->
-    <div class="toggleLayer menuToggle" :class="isShowTab ? 'menuShow' : 'menuHidden'"  @click="showTab">
-      <img src="@/assets/layers.svg" alt="layers" />
+        <el-menu-item index="4" @click="()=>{sysMode = 'corre'; isDrawing = false;}" >
+          <i class="el-icon-connection"></i>
+          <span slot="title">添加关联</span>
+        </el-menu-item>
+      </el-menu>
     </div>
-    <div class="menuZoom menu" :class="isShowTab ? 'menuShow' : 'menuHidden'">
-      <div class="menuItem" @click="zoomIn">
-        <p>+</p>
+    <div class="right">
+      <div id="map"></div>
+
+      <div id="mouse-position" class="coor"></div>
+
+      <div class="toggleLayer menuToggle" :class="isShowTab ? 'menuShow' : 'menuHidden'"  @click="showTab">
+        <img src="@/assets/layers.svg" alt="layers" />
       </div>
-      <div class="menuItem" @click="zoomOut">
-        <p>-</p>
-      </div>
-    </div>
-    <tab
-      class="tab"
-      v-show="isShowTab"
-      :class="isShowTab ? 'tabShow' : 'tabHidden'"
-    ></tab>
-
-    <!-- 添加设施区域 -->
-    <div class="modeDiv editDiv" v-if="sysMode == 'edit'" >
-      <el-select v-model="editType" placeholder="请选择">
-        <el-option
-          label="点要素"
-          value="Point">
-        </el-option>
-        <el-option
-          label="线要素"
-          value="LineString">
-        </el-option>
-        <el-option
-          label="面要素"
-          value="Polygon">
-        </el-option>
-      </el-select>
-      <el-button-group class="btns">
-        <el-button icon="el-icon-edit" @click="drawFeature"></el-button>
-        <el-button icon="el-icon-refresh-left" @click="undoDrawing"></el-button>
-        <!-- <el-button icon="el-icon-delete" @click="dltFeature" :disabled="isDrawing"></el-button> -->
-        <!-- <el-button type="primary" icon="el-icon-upload2" @click="uploadFeature" ></el-button> -->
-      </el-button-group>
-    </div>
-    <div class="upfeatureForm" v-if="upfeatureForm">
-      <el-form class="formContent" ref="form" :model="featureForm" :action="onfeatureSubmit" label-width="80px">
-        <!-- id  设施名  设施描述  设施类别  要素类别  几何要素 -->
-        <el-form-item label="设施名">
-          <el-input v-model="featureForm.faciname"></el-input>
-        </el-form-item>
-
-        <el-form-item label="设施描述">
-          <el-input v-model="featureForm.facidesc"></el-input>
-        </el-form-item>
-
-        <el-form-item label="设施类别">
-          <el-select v-model="featureForm.facitype">
-            <el-option v-for="(type,index) in faciType" :label="type" :value="type" :key="index"></el-option>
-          </el-select>
-        </el-form-item>
-        
-        <div class="formbtns">
-          <el-button @click="dltDrawedFeature">取消</el-button>
-          <el-button type="primary" @click="onfeatureSubmit">提交</el-button>
+      <div class="menuZoom menu" :class="isShowTab ? 'menuShow' : 'menuHidden'">
+        <div class="menuItem" @click="zoomIn">
+          <p>+</p>
         </div>
+        <div class="menuItem" @click="zoomOut">
+          <p>-</p>
+        </div>
+      </div>
+      
+      <router-view
+        class="tab"
+        v-show="isShowTab"
+        :class="isShowTab ? 'tabShow' : 'tabHidden'"
+      ></router-view>
 
-      </el-form>
+
+      <div class="modeDiv editDiv" v-if="sysMode == 'edit'" >
+        <el-select v-model="editType" placeholder="请选择">
+          <el-option
+            label="点要素"
+            value="Point">
+          </el-option>
+          <el-option
+            label="线要素"
+            value="LineString">
+          </el-option>
+          <el-option
+            label="面要素"
+            value="Polygon">
+          </el-option>
+        </el-select>
+        <el-button-group class="btns">
+          <el-button icon="el-icon-edit" @click="drawFeature"></el-button>
+          <el-button icon="el-icon-refresh-left" @click="undoDrawing"></el-button>
+        </el-button-group>
+      </div>
+
+      <div class="upfeatureForm" v-if="upfeatureForm">
+        <el-form class="formContent" ref="form" :model="featureForm" :action="onfeatureSubmit" label-width="80px">
+          <el-form-item label="设施名">
+            <el-input v-model="featureForm.faciname"></el-input>
+          </el-form-item>
+
+          <el-form-item label="设施描述">
+            <el-input v-model="featureForm.facidesc"></el-input>
+          </el-form-item>
+
+          <el-form-item label="设施类别">
+            <el-select v-model="featureForm.facitype">
+              <el-option v-for="(type,index) in faciType" :label="type" :value="type" :key="index"></el-option>
+            </el-select>
+          </el-form-item>
+          
+          <div class="formbtns">
+            <el-button @click="dltDrawedFeature">取消</el-button>
+            <el-button type="primary" @click="onfeatureSubmit">提交</el-button>
+          </div>
+
+        </el-form>
+      </div>
+
+
+      <div class="modeDiv correDiv" v-if="sysMode == 'corre'">
+        <el-select v-model="isCorreingFaciId" placeholder="请选择要关联的设施">
+          <el-option v-for="(faci, index) in faciIdAndNames" :label="faci.faciname"  :value="faci.fid" :key="index"> </el-option>
+        </el-select>
+        <el-button-group class="btns">
+          <el-button icon="el-icon-mouse" @click="chooseFeatures">选择路段</el-button>
+          <el-button type="primary" icon="el-icon-connection" @click="makeCorre">关联设施</el-button>
+        </el-button-group>
+      </div>
+
     </div>
-
-    <!-- 关联区域 -->
-    <div class="modeDiv correDiv" v-if="sysMode == 'corre'">
-      <el-select v-model="isCorreingFaciId" placeholder="请选择要关联的设施">
-        <el-option v-for="(faci, index) in faciIdAndNames" :label="faci.faciname"  :value="faci.fid" :key="index"> </el-option>
-      </el-select>
-      <el-button-group class="btns">
-        <el-button icon="el-icon-mouse" @click="chooseFeatures">选择路段</el-button>
-        <el-button type="primary" icon="el-icon-connection" @click="makeCorre">关联设施</el-button>
-      </el-button-group>
-    </div>
-
 
   </div>
 </template>
 <script>
-import tab from "@/components/tab.vue";
+import VecToggle from "@/view/vecToggle.vue";
 import {request} from '@/utils/request'
-import {postFeature} from "@/utils/api"
+import {postFeature, postCorre, getfacinfobyid} from "@/utils/api"
 import { nanoid } from 'nanoid'
 
 // 引入openlayer的包
@@ -133,6 +133,7 @@ import { set } from 'ol/transform';
 import { click, platformModifierKeyOnly } from 'ol/events/condition';
 
 
+// 设施id  
 
 // 矢量 卫星 地形
 const vecUrl = "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=m&gl=CN&x={x}&y={y}&z={z}";
@@ -142,7 +143,7 @@ const terUrl = "https://gac-geo.googlecnapps.cn/maps/vt?lyrs=p,m&gl=CN&x={x}&y={
 export default {
   name: "mapHome",
   components: {
-    tab,
+    VecToggle,
   },
   data() {
     return {
@@ -176,11 +177,10 @@ export default {
       faciIdAndNames:[
         
       ],
-      isCorreingFaciId:"",
 
       isShowTab: false,
 
-      select: null,
+      // select: null,
       mousePositionControl: null,
 
       addSegLayersFlag: true,
@@ -198,9 +198,9 @@ export default {
       sysMode:'none',
       upfeatureForm:false,
 
-  
 
       // 关联功能数据
+      isCorreingFaciId:"",
       vecLayerCorre:null,
       vecSourceCorre:null,
       correSelect:null,
@@ -210,11 +210,20 @@ export default {
         "fid": "",
         "segIds": new Set()
       },
+
+      // 设施信息显示功能
+      facSelect:null,
     };
   },
   mounted() {
     this.$eventBus.$on("chgTileMap", (mapType) => this.changeBasemap(mapType));
-    this.$eventBus.$on("showTab", () => this.isShowTab = !this.isShowTab);
+    this.$eventBus.$on("showTab", () => { 
+      if(this.isShowTab && this.$route.name === 'facinfo'){
+      }else{
+        this.isShowTab = !this.isShowTab
+      }
+      this.$router.push({name:'vectoggle'})
+    });
     this.$eventBus.$on("chgVecLayer", (vecLayerList)=>{
       let vecLayermapping = {
         "缓冲区矢量图层":this.vecLayer_buffer,
@@ -228,13 +237,27 @@ export default {
         }
       }
     })
+
+    this.$eventBus.$on("fileChange", (fid)=>{
+      if(sessionStorage.getItem(fid)){
+        sessionStorage.removeItem(fid)
+      }
+      console.log("fileChange事件总线触发,fid="+fid)
+      getfacinfobyid({"id": fid}).then(res=>{
+        console.log(res.data)
+        sessionStorage.setItem(fid, JSON.stringify({
+          "facinfo":res.data.facinfo,
+          "files":res.data.docinfo
+        }))
+      })
+    })
     this.initMap();
   },
   watch:{
     sysMode:{
       handler(newVal){
         if(newVal == "edit"){
-          this.clearCorre()
+          this.clearCorreDraw()
         }else if(newVal == "corre"){
           this.isDrawing=false
         }
@@ -255,15 +278,11 @@ export default {
     },
     isCorreingFaciId:{
       handler(newVal, oldVal){
-        if(this.correSelect && this.vecLayerCorre){
-          this.correSelect.getFeatures().clear()
-          this.vecLayerCorre.getSource().clear()
-
-          this.map.removeInteraction(this.correSelect)
-          this.map.removeInteraction(this.correDraw)
-        }
+        this.clearCorreDraw()
         let feature = this.getFaciFeatureFromId(newVal)
         console.log(feature)
+        this.postCorreData.fid = newVal
+        console.log(this.postCorreData)
         this.positionExtent(feature)
       }
     }
@@ -364,6 +383,7 @@ export default {
       let featureType = isCorreingFaciFeature.getGeometry().getType()
       console.log(isCorreingFaciFeature.getGeometry().getType())
 
+      this.postCorreData.segIds = new Set()
       if(featureType === "LineString" || featureType === "Point"){
         console.log("--Linestring || Point")
         this.correSelect = new Select({
@@ -439,10 +459,31 @@ export default {
         this.map.addInteraction(this.correSelect)
         this.map.addInteraction(this.correDraw)
       }
+
+ 
     },
     makeCorre(){
-      this.$message({message:'成功添加关联', type:'success'});
-      console.log(this.postCorreData)
+      let postData =
+      {
+        fid:this.postCorreData.fid,
+        segIds: Array.from(this.postCorreData.segIds)
+      }
+      
+      postCorre(postData).then(res=>{
+        console.log(res)
+        this.$message({message:'成功添加关联', type:'success'});
+      }).catch(error=>{
+        this.$message({message:'添加关联失败', type:'error'});
+        console.log(error)
+      })
+
+      this.postCorreData = {
+        "fid": "",
+        "segIds": new Set()
+      }
+      this.removeHlLayer()
+      this.clearCorreDraw()
+      console.log(this.postData)
     },
     positionExtent(feature){
       // 移除高亮
@@ -554,7 +595,7 @@ export default {
       })
       return retFeature
     },
-    clearCorre(){
+    clearCorreDraw(){
       if(this.correSelect ){
         this.correSelect.getFeatures().clear()
       }
@@ -602,8 +643,6 @@ export default {
             stroke: new Stroke({
               color: "rgb(254, 255, 134)",
               width: 15,
-              lineCap: "round",
-              lineJoin: "round",
             }),
           }),
         })
@@ -622,8 +661,8 @@ export default {
             stroke: new Stroke({
               color: "rgb(254, 255, 134)",
               width: 3,
-              lineCap: "round",
-              lineJoin: "round",
+              // lineCap: "round",
+              // lineJoin: "round",
             }),
           }),
         })
@@ -647,7 +686,7 @@ export default {
         }),
         controls: defaultControls().extend([this.mousePositionControl]),
       });
-      // this.selectConfig()
+      this.selectConfig()
 
       if(this.addSegLayersFlag){
         this.map.addLayer(this.vecLayer_line_segs)
@@ -715,39 +754,62 @@ export default {
       this.editVecLayer = new VectorLayer({source:this.editVecSource})
     },
     selectConfig(){
-      this.select = new Select({
+      this.facSelect = new Select({
         condition: click,
-        toggleCondition: platformModifierKeyOnly,
-        layers:[this.vecLayer_line_segs],
+        layers:[this.vecLayer_facilities],
         style: new Style({
-          image: new Circle({
-            radius: 3,
-            fill: new Fill({
-                color: 'blue'
-            })
-          }),
           stroke: new Stroke({
-            color: 'rgba(255,92,92)',
-            // lineDash: [5],
-            width: 15
-          })
+            color: '#609966',
+            width: 3
+          }),
+          fill: new Fill({ color: "#4e98f444" }),
         })
       });
-      this.map.addInteraction(this.select)
+      this.map.addInteraction(this.facSelect)
+
+      this.facSelect.on('select', (e) => {
+        let slFeature = e.target.getFeatures().getArray()[0]
+        if(slFeature){
+          this.$router.push({name:'facinfo', params: {fid: slFeature.getId()} })
+          this.isShowTab = true
+        }else{
+          this.isShowTab = false
+        }
+      });
     },
   },
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang="scss">
+<style lang="scss" scoped>
+
+$mapheight: 671px;
 * {
   --main-bg-color: rgb(42, 154, 230);
   margin: 0;
 }
+
+
+
+.container{
+  min-width: 400px;
+  height: 100%;
+  display: flex;
+  .right{
+    position: relative;
+    flex: 1;
+  }
+  .left{
+    width: 65px;
+    background-color: #faf8f1;    
+  }
+}
+
 #map {
   width: 100%;
-  height: 693px;
+  // height: $mapheight;
+  height: 100%;
 }
 /* #map:focus {
   outline: #4a74a8 solid 0.15em;
@@ -817,8 +879,8 @@ export default {
   position: absolute;
   left: 80%;
   width: 20%;
-  height: 693px;
-  top: 60px;
+  height: 100%;
+  top: 0;
   box-sizing: border-box;
   background-color: #fcfbf8;
 }
@@ -831,15 +893,11 @@ export default {
 .coor {
   position: absolute;
   width: auto;
-  height: 20px;
-  left: 45%;
-  bottom: 1%;
-  border: 1px solid white;
-  border-radius: 15px;
-  text-align: center;
-  padding: 5px;
-  background-color: rgba(219, 228, 198, 0.7);
   color: rgb(64, 81, 59);
+
+  right: 3%;
+  bottom: 1%;
+
 }
 
 .toggleLayer{
@@ -864,29 +922,17 @@ export default {
   background-color: rgb(9, 139, 9);
   opacity: 100%;
 }
-
-.el-menu-vertical-demo:not(.el-menu--collapse) {
-  width: 200px;
-  min-height: 400px;
-}
-
 .modeDiv{
   position: absolute;
-  top: 10%;
+  top: 5%;
   display: flex;
+
+  left: 50%;
+  transform: translateX(-50%);
 }
 .btns{
   margin-left: 10px;
 }
-
-.correDiv{
-  left: 35%;
-}
-
-.editDiv{
-  left: 40%;
-}
-
 .upfeatureForm{
   width: 30%;
   height: 45%;

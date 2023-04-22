@@ -35,26 +35,34 @@ export default {
 
 <style lang="scss">
 .navBar {
+  height: 100%;
   position: relative;
   box-sizing: border-box;
-  background-color: #FAF8F1;
+  background-color: #609966;
+
   padding: 10px;
-  height: 60px;
+
   display: flex;
   justify-content: space-between;
+
   .title{
     display: flex;
+    p{
+      white-space:nowrap; 
+    }
+    // flex-grow: 1;
   }
 }
 .SysName {
-  color: #40513b;
+  color: #FAF8F1;
   font-size: 25px;
   font-weight: bold;
+  margin: 0;
   margin-left: 5px;
   padding-top: 3px;
 }
 
-.SysName:hover{
+.title:hover{
   cursor: pointer;
 }
 .navbarItems {
@@ -103,7 +111,10 @@ export default {
   }
   .login {
     color: #fff;
-    background-color: #609966;
+    background-color: #29622f;
+  }
+  .register{
+    background-color: #FAF8F1;
   }
 }
 

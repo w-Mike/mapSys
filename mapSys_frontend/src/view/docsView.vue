@@ -2,12 +2,12 @@
   <div class="Container">
 
     <div class="showFiles">
-      <files :files="files" v-loading="isloading"></files>
+      <file-list :files="files" v-loading="isloading"></file-list>
     </div>
 
     <el-form class="formContent" ref="form" :model="form" :action="onSubmit" label-width="80px">
       <div class="selectDiv">
-        <el-form-item label="文件类型">
+        <el-form-item label="文件类型" required>
           <el-select v-model="form.category" placeholder="请选择文件类型">
             <el-option label="文档" value="doc"></el-option>
             <el-option label="数据" value="data"></el-option>
@@ -17,29 +17,40 @@
             <!-- "文档", "数据", "样本", "算法", "案例" -->
           </el-select>
         </el-form-item>
-
       </div>
 
-      <el-form-item label="文件名称">
+      <el-form-item label="关联设施" required>
+        <el-select v-model="form.correfid" placeholder="选择文件关联的设施">
+          <el-option v-for="(item, index) in fidNames" :key="index" :label="item.faciname" :value="item.fid"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="关联路段">
+        <el-select multiple collapse-tags v-model="form.segids">
+          <el-option v-for="(item) in segs" :key="item.sid" :label="item.segName" :value="item.sid"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="文件名称" required>
         <el-input v-model="form.name"></el-input>
       </el-form-item>
-      <el-form-item label="文件描述">
+      <el-form-item label="文件描述" required>
         <el-input type="textarea" v-model="form.description"></el-input>
       </el-form-item>
 
-      <el-form-item label="创建时间">
+      <el-form-item label="创建时间" required>
         <el-col :span="11">
           <el-date-picker type="date" placeholder="选择日期" v-model="form.date" style="width: 100%;"></el-date-picker>
         </el-col>
-        <el-col class="line" :span="2">
-          <p class="divider">-</p>
+        <el-col class="line" :span="1">
+          <p class="divider">--</p>
         </el-col>
         <el-col :span="11">
           <el-time-picker placeholder="选择时间" v-model="form.time" style="width: 100%;"></el-time-picker>
         </el-col>
       </el-form-item>
 
-      <el-form-item label="文件上传">
+      <el-form-item label="文件上传" required>
         <el-upload
           action=""
           :before-remove="beforeRemove"
@@ -64,13 +75,13 @@
 </template>
 
 <script>
-import { postFile, reqFiles } from "@/utils/api";
-import Files from '@/components/files.vue'
+import { postFile, reqFiles, getSidsforfid, getfidNames } from "@/utils/api";
+import FileList from '@/components/fileList.vue'
 export default {
   components: {
-    Files,
+    FileList,
   },
-  data() {
+  data() { 
     return {
       form: {
         category: "",
@@ -80,6 +91,9 @@ export default {
         date: "",
         time: "",
         file: "",
+
+        correfid:"",
+        segids:[],
       },
       
       fileList:[],
@@ -89,12 +103,37 @@ export default {
 
       files:'',
       isloading:true,
+
+      // 设施路段关联部分
+      fidNames:[],
+      segs:[],
     };
   },
+  watch:{
+    'form.correfid':{
+      handler:function(newVal){
+        getSidsforfid({"fid":newVal}).then(res=>{
+          // console.log(res.data)
+          this.segs = res.data.data
+        })
+      }
+    }
+  },
   methods: {
+    getFnameByid(fid){
+      let rst = "none"
+      if(this.fidNames.length !== 0){
+        this.fidNames.forEach((item, index)=>{
+          if(item.fid.trim() == fid.trim()){
+            rst = item.faciname
+          }
+        })
+      }
+      return rst  
+    },
     fileChange(file,fileList) {
       this.form.file = file.raw
-      console.log(this.form.file)
+      // console.log(this.form.file)
     },
     onSubmit(event) {
       event.preventDefault();
@@ -111,9 +150,11 @@ export default {
       postFile(formData).then(
         (res) => {
           this.$message({message:'上传成功', type:'success'});
-          console.log(res);
+
+          this.$eventBus.$emit("fileChange", this.form.correfid)
           this.onReset()
           this.getFiles()
+
         },
         (error) => {
           this.$message({message:'上传失败', type:'error'});
@@ -129,7 +170,9 @@ export default {
         description: "",
         date: "",
         time: "",
-        file: "",
+        file: "", 
+        correfid:"",
+        segids:[],
       };
       this.fileList = []
     },
@@ -137,8 +180,8 @@ export default {
       return this.$confirm(`确定移除 ${ file.name }？`);
     },
     handleRemove(file, fileList){
-      console.log(file)
-      console.log(fileList)
+      // console.log(file)
+      // console.log(fileList)
     },
     chooseFile(params){
       console.log("调用了chooseFIle")
@@ -148,7 +191,13 @@ export default {
     getFiles(){
       reqFiles().then((response) => {
         this.isloading=false
-        this.files = response.data.gisdocs;
+        let resData = response.data.gisdocs
+        resData.forEach((item, index)=>{
+          console.log(item.correfid)
+          item.faciname = this.getFnameByid(item.correfid)
+          console.log(item.faciname)
+        })
+        this.files = resData;
         // console.log(response.data.gisdocs);
       }).catch(error=>{
         this.$message({message:'读取文件失败，请检查网络', type:'error'});
@@ -160,7 +209,13 @@ export default {
     }
   },
   created() {
-    this.getFiles()
+    getfidNames().then(res=>{
+      this.fidNames = res.data.data
+      this.getFiles()
+    }).catch(err=>{
+      console.log(err)
+    })
+
   },
 };
 </script>
@@ -179,7 +234,7 @@ export default {
   height: 100%;
   padding: 50px;
   box-sizing: border-box;
-  padding-top: 6%;
+  padding-top: 2%;
   position: fixed;
   right: 0%;
   .selectDiv{

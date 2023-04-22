@@ -18,7 +18,8 @@ import {
   MenuItemGroup,
   ButtonGroup,
   CheckboxGroup,
-  Checkbox
+  Checkbox,
+  Popconfirm,
   
 } from 'element-ui'
 
@@ -34,15 +35,16 @@ export default {
     Vue.use(TimePicker)
     Vue.use(Option)
     Vue.use(OptionGroup)
-    Vue.use(Row),
-    Vue.use(Col),
-    Vue.use(Tag),
-    Vue.use(Menu),
-    Vue.use(MenuItem),
-    Vue.use(Submenu),
-    Vue.use(MenuItemGroup),
-    Vue.use(ButtonGroup),
-    Vue.use(CheckboxGroup),
+    Vue.use(Row)
+    Vue.use(Col)
+    Vue.use(Tag)
+    Vue.use(Menu)
+    Vue.use(MenuItem)
+    Vue.use(Submenu)
+    Vue.use(MenuItemGroup)
+    Vue.use(ButtonGroup)
+    Vue.use(CheckboxGroup)
     Vue.use(Checkbox)
+    Vue.use(Popconfirm)
   }
 }
