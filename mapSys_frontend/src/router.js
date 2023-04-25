@@ -1,9 +1,9 @@
 import VueRouter from 'vue-router'
 import Vue from 'vue'
-import DocsView from "@/view/docsView"
-import MapView from "@/view/mapView"
-import VecToggle from "@/view/vecToggle.vue"
-import facInfo from "@/view/facInfo.vue"
+
+import UpdocView from "@/view/updocView.vue"
+import FilesView from "@/view/filesView.vue"
+import FacsView from "@/view/facsView"
 Vue.use(VueRouter)
 
 const changePush = VueRouter.prototype.push;
@@ -13,28 +13,19 @@ VueRouter.prototype.push = function push(location) {
 
 const routes = [
   {
-    name:'home',
-    path:'/',
-    component:MapView,
-    children:[
-      {
-        name:"vectoggle",
-        path:"vectoggle",
-        component:VecToggle
-      },
-      {
-        name:"facinfo",
-        path:"facinfo:fid",
-        component:facInfo
-      }
-    ]
-
+    name:'updoc',
+    path:'/updoc',
+    component: UpdocView
   },
   {
-    name:'docs',
-    path:'/docs',
-    component: DocsView
-  },
+    name:"files",
+    path:'/files',
+    component: FilesView
+  },{
+    name:"facs",
+    path:"/facs",
+    component: FacsView,
+  }
 ]
 const router =  new VueRouter({
   routes,

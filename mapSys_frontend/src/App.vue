@@ -1,20 +1,18 @@
 <template>
   <div id="app">
     <nav-bar class="header"></nav-bar>
-    <keep-alive include="home">
-      <router-view class="content"></router-view>
-    </keep-alive>
-
+    <map-home class="content"></map-home>
   </div>
 </template>
 
 <script>
 import NavBar from "@/components/navBar.vue";
-
+import MapHome from "@/components/mapHome.vue"
 export default {
   name: "App",
   components: {
     NavBar,
+    MapHome,
   },
 };
 </script>

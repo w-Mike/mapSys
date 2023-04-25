@@ -12,7 +12,7 @@
         <span>卫星图</span>
       </div>
     </div>
-    <divider class="divider"></divider>
+    <hr class="divider">
     <div class="vecMap">
       <h5>矢量图层</h5>
       <el-checkbox-group v-model="vecLayerList" @change="onChange" class="checkboxes">
@@ -25,12 +25,9 @@
 </template>
 
 <script>
-import divider from '@/components/divider.vue'
 export default {
   name:'tab',
-  components:{
-    divider
-  },
+
   data(){
     return{
 

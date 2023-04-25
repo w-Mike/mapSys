@@ -267,6 +267,7 @@ def handle_facbyid():
     print(docs)
     docinfo = [
       {
+        "id": doc.id,
         "name":doc.name,
         "description":doc.description,
         "category":doc.category,
@@ -274,7 +275,7 @@ def handle_facbyid():
       }for doc in docs 
     ]
 
-    return {"facinfo":faciInfo[0], "docinfo":docinfo}
+    return {"facinfo": faciInfo[0], "docinfo": docinfo}
 
 @app.route('/docbyfid', methods=['GET'])
 def handle_docbyfid():
