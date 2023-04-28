@@ -10,7 +10,7 @@
               <el-tag class="elTag" type="success">{{ fac.facitype }}</el-tag>
             </div>
             <div>
-              <el-button size="small" type="danger" @click="dltFile(file.id, file.correfid)">删除</el-button>
+              <!-- <el-button size="small" type="success" @click.stop="editFeature">编辑</el-button> -->
             </div>
           </div>
           <hr class="divider">
@@ -23,10 +23,28 @@ export default {
   props:['facInfos'],
   data(){
     return{
+      editForm:{
+
+      },
+      showFormFlag: false,
 
     }
   },
   methods:{
+    fileChange(file,fileList) {
+      this.featureForm.file = file.raw
+    },
+    beforeRemove(file, fileList){
+      return this.$confirm(`确定移除 ${ file.name }？`);
+    },
+    chooseFile(params){
+      this.featureForm.file = params.file!==null ? params.file.raw : null
+    },
+    handleRemove(){},
+
+    editFeature(){
+
+    },
     movetoFaci(facid){
       console.log(facid)
       this.$eventBus.$emit("movetoFaci", facid)

@@ -1,7 +1,6 @@
 <template>
   
   <div>
-    <h3 v-show="!files.length" class="warnInfo"> 无文件数据 </h3>
     <h2 v-show="files.length" style="margin-top:20px; margin-left:20px;">文件列表：</h2>
     <div class="filesList">
       <div class="list" v-loading="isloading">
@@ -14,8 +13,8 @@
             </div>
             <div>
               <em>{{ $dayjs(file.dateTime).format("YYYY-MM-DD") }}</em>
-              <el-button class="elbutton" size="small" type="primary">下载</el-button>
-              <el-button size="small" type="danger" @click="dltFile(file.id, file.correfid)">删除</el-button>
+              <el-button class="elbutton" size="small" type="primary" @click="downloadFile(file.correfid.trim(), file.id.trim())">下载</el-button>
+              <el-button size="small" type="danger" @click="dltFile(file.id.trim(), file.correfid.trim())">删除</el-button>
             </div>
           </div>
           <hr class="divider">
@@ -39,6 +38,54 @@ export default {
     }
   },
   methods:{
+    downloadFile(correfid,docid){
+      let folderPath = `http://localhost:9999/${correfid}/${docid}`
+      console.log(folderPath)
+      let parser 
+      let doc 
+      let link
+      let filename 
+
+      fetch(folderPath)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+          return response.text();
+      })
+      .then(html => {
+        parser = new DOMParser();
+        doc = parser.parseFromString(html, 'text/html');
+        link = doc.querySelector('a:nth-child(2)'); // Assuming there's only one file in the folder
+        filename = link.textContent.trim();
+        console.log(`${folderPath}/${filename}`)
+        return fetch(`${folderPath}/${filename}`);
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        // Do something with the blob
+        console.log(blob)
+        if(blob.size > 0){
+          const downloadLink = document.createElement('a')
+          downloadLink.download = filename
+          downloadLink.style.display = "none"
+          downloadLink.href = URL.createObjectURL(blob)
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          URL.revokeObjectURL(downloadLink.href)
+          document.body.removeChild(downloadLink)
+        }
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+    },
+
     getFiles(){
       reqFiles().then((response) => {
         this.isloading=false

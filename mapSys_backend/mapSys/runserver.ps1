@@ -1,3 +1,3 @@
-../mapSys_venv/Scripts/activate.ps1
+conda activate mapSysVenv
 $env:FLASK_APP = "mapSysApp.py"
 flask run

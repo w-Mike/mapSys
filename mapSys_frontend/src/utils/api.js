@@ -1,5 +1,4 @@
-import { reqFile, request } from "@/utils/request"
-import { method } from "lodash"
+import { reqFile, request,reqfeature } from "@/utils/request"
 
 // Post 文件信息给服务端
 export const postFile = data => {
@@ -19,8 +18,9 @@ export const reqFiles = ()=>{
 }
 
 // 绘制的要素传递给服务端
+
 export const postFeature = data =>{
-  return request({
+  return reqfeature({
     method:"POST",
     url:"facilities",
     data

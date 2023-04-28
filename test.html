@@ -6,15 +6,55 @@
   <title>Document</title>
 </head>
 <body>
-  
+   
 </body>
 <script>
-  console.log(sessionStorage.setItem("abc", JSON.stringify({"a":1})))
+    let folderPath = `http://localhost:9999/28pMS_koFa`
+    console.log(folderPath)
 
-  let item 
-  if(item = sessionStorage.getItem("abc") ) {
-    console.log(item instanceof Object)
-  }
-  console.log(item)
+    let parser 
+    let doc 
+    let link
+    let filename 
+
+    fetch(folderPath)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+        return response.text();
+    })
+    .then(html => {
+      parser = new DOMParser();
+      doc = parser.parseFromString(html, 'text/html');
+      link = doc.querySelector('a:nth-child(2)'); // Assuming there's only one file in the folder
+      filename = link.textContent.trim();
+      console.log(`${folderPath}/${filename}`)
+      return fetch(`${folderPath}/${filename}`);
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.blob();
+    })
+    .then(blob => {
+      // Do something with the blob
+      console.log(blob)
+      if(blob.size > 0){
+        const downloadLink = document.createElement('a')
+        downloadLink.download = filename
+        downloadLink.style.display = "none"
+        downloadLink.href = URL.createObjectURL(blob)
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        URL.revokeObjectURL(downloadLink.href)
+        document.body.removeChild(downloadLink)
+
+      }
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
 </script>
 </html>

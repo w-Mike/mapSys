@@ -128,17 +128,30 @@ def handle_gisdocs():
       formData[item[0]] = item[1]
     # 文件保存
     file = request.files['file']
-    saveLocalpath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
-    file.save(saveLocalpath)
 
-    # 增添formData的属性
+    print(formData)
+
     docid = generate("1234567890abcdef", 10)
     formData['docid'] = docid
-    formData['localpath'] = saveLocalpath
+
+    facPath = os.path.join(app.config['UPLOAD_FOLDER'],  formData["correfid"])
+    docPath = os.path.join(facPath, formData["docid"])
+
+    if not os.path.exists(facPath):
+      os.mkdir(facPath)
+    if not os.path.exists(docPath): 
+      os.mkdir(docPath)   
+  
+    saveLocalpath = os.path.join(docPath, secure_filename(file.filename))
+
+    # 增添formData的属性
+    formData['localpath'] = docPath
 
     new_gisdoc = gisdocsModel(formData)
     db.session.add(new_gisdoc)
     db.session.commit()
+
+    file.save(saveLocalpath)
   
     segidsList = formData['segids'].split(',')
     if(segidsList):
@@ -215,10 +228,22 @@ def handle_facilities():
     ]
     return results
   elif request.method == 'POST':
-    data = dict(request.get_json())
-    new_facility = facilitiesModel(data)
+    formData = {}
+    for item in request.form.items():
+      formData[item[0]] = item[1]
+    print(formData)
+
+    # 文件保存
+    file = request.files['file']
+    facPath = os.path.join(app.config['UPLOAD_FOLDER'],  formData['fid'])
+    if not os.path.exists(facPath):
+      os.mkdir(facPath)
+
+    new_facility = facilitiesModel(formData)
     db.session.add(new_facility)
     db.session.commit()
+    
+    file.save(os.path.join(facPath, "picture.png"))
     return {'message': f"doc {new_facility.faciname} 成功被添加到数据库"}
   
 def sidToSegname(sidstr):

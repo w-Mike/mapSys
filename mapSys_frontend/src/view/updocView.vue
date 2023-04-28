@@ -60,6 +60,7 @@
             <el-button type="success">选择文件</el-button>   <span>(小于1Mb)</span>
         </el-upload>
         </el-form-item>
+        
         <el-form-item class="buttonDiv">
           <el-button type="warning" @click="onReset">重写</el-button>
           <el-button type="primary" @click="onSubmit">提交</el-button>

@@ -72,28 +72,45 @@
           </el-button-group>
         </div>
 
-        <div class="upfeatureForm" v-if="upfeatureForm">
-          <el-form class="formContent" ref="form" :model="featureForm" :action="onfeatureSubmit" label-width="80px">
-            <el-form-item label="设施名">
-              <el-input v-model="featureForm.faciname"></el-input>
-            </el-form-item>
+        <div class="upFeatureFormCon" v-show="upfeaFormFlag">
+          <div class="upfeatureForm">
+            <el-form class="formContent" ref="form" :model="featureForm" :action="onfeatureSubmit" label-width="80px">
+              <el-form-item label="设施名">
+                <el-input v-model="featureForm.faciname"></el-input>
+              </el-form-item>
 
-            <el-form-item label="设施描述">
-              <el-input v-model="featureForm.facidesc"></el-input>
-            </el-form-item>
+              <el-form-item label="设施描述">
+                <el-input v-model="featureForm.facidesc"></el-input>
+              </el-form-item>
 
-            <el-form-item label="设施类别">
-              <el-select v-model="featureForm.facitype">
-                <el-option v-for="(type,index) in faciType" :label="type" :value="type" :key="index"></el-option>
-              </el-select>
-            </el-form-item>
-            
-            <div class="formbtns">
-              <el-button @click="dltDrawedFeature">取消</el-button>
-              <el-button type="primary" @click="onfeatureSubmit">提交</el-button>
-            </div>
+              <el-form-item label="设施类别">
+                <el-select v-model="featureForm.facitype">
+                  <el-option v-for="(type,index) in faciType" :label="type" :value="type" :key="index"></el-option>
+                </el-select>
+              </el-form-item>
 
-          </el-form>
+              <el-form-item label="设施图片" required>
+                <el-upload
+                  action=""
+
+                  :before-remove="beforeRemove"
+                  :on-remove="handleRemove"
+                  :on-change="fileChange"
+
+                  :auto-upload="false"
+                  :multiple="false" 
+                  :limit="1"
+                  >
+                  <el-button type="success">选择文件</el-button>   <span>(仅允许上传一个图片)</span>
+              </el-upload>
+              </el-form-item>
+                
+              <div class="formbtns">
+                <el-button @click="dltDrawedFeature">取消</el-button>
+                <el-button type="primary" @click="onfeatureSubmit">提交</el-button>
+              </div>
+            </el-form>
+          </div>
         </div>
 
         <div class="modeDiv correDiv" v-if="sysMode == 'corre'">
@@ -134,7 +151,8 @@ import TileLayer from "ol/layer/Tile.js";
 import VectorLayer from "ol/layer/Vector.js";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
-import { Fill, Style, Stroke, Circle } from "ol/style";
+import { Fill, Style, Stroke, Circle, Icon} from "ol/style";
+
 import View from "ol/View.js";
 import WKB from "ol/format/WKB.js";
 import XYZ from "ol/source/XYZ";
@@ -142,9 +160,7 @@ import MousePosition from "ol/control/MousePosition.js";
 import { createStringXY } from "ol/coordinate.js";
 import { defaults as defaultControls } from "ol/control.js";
 import WKT from 'ol/format/WKT.js';
-import {Draw, Modify, Snap, Select} from 'ol/interaction.js';
-import {get} from "ol/proj";
-import { set } from 'ol/transform';
+import {Draw, Select} from 'ol/interaction.js';
 import { click, platformModifierKeyOnly } from 'ol/events/condition';
 
 
@@ -170,6 +186,8 @@ export default {
         facitype:"",
         featuretype:"",
         geom:"",
+
+        file:"",
       },
       facilitiesName:[],
       faciType:[
@@ -212,7 +230,7 @@ export default {
       isDrawing:false,
 
       sysMode:'none',
-      upfeatureForm:false,
+      upfeaFormFlag:false,
 
 
       // 关联功能数据
@@ -238,6 +256,7 @@ export default {
     };
   },
   mounted() {
+
     this.$eventBus.$on("movetoFaci", (facid)=>{
         this.clearCorreDraw()
         let feature = this.getFaciFeatureFromId(facid)
@@ -294,16 +313,41 @@ export default {
   watch:{
     sysMode:{
       handler(newVal){
-        if(newVal == 'none'){
+        if(newVal === "none"){
           this.clearCorreDraw()
+          this.removeHlLayer()
           this.isDrawing=false
         }
-        if(newVal == "edit"){
+        if(newVal == 'edit' || newVal =='corre'){
           this.showLeftTabFlag = false
-          this.clearCorreDraw()
-        }else if(newVal == "corre"){
-          this.showLeftTabFlag = false
+        }
+
+        // leftTab Router: files facs upfile  
+        if(newVal !== "files"){
+
+        }
+        if(newVal !== "facs"){
+          this.removeHlLayer()
+        }
+        if(newVal !== "upfile"){
+
+        }
+        // edit corre
+
+        if(newVal !== "edit"){
           this.isDrawing=false
+        }
+        if(newVal !== "corre"){
+
+          this.clearCorreDraw()
+          if(this.facSelect === null){
+            this.selectConfig()
+          }
+        }
+        
+        if(newVal === "corre"){
+          this.map.removeInteraction(this.facSelect)
+          this.facSelect = null
         }
       }
     },
@@ -330,8 +374,18 @@ export default {
     }
   },
   methods: {
+    fileChange(file,fileList) {
+      this.featureForm.file = file.raw
+    },
+    beforeRemove(file, fileList){
+      return this.$confirm(`确定移除 ${ file.name }？`);
+    },
+    chooseFile(params){
+      this.featureForm.file = params.file!==null ? params.file.raw : null
+    },
+    handleRemove(){},
     facsToggle(){
-      this.sysMode = 'none'
+      this.sysMode = 'facs'
 
       if(this.$route.name !== 'facs' && this.showLeftTabFlag){
         this.$router.push({'name':'facs'})
@@ -343,7 +397,7 @@ export default {
       }
     },
     filesToggle(){
-      this.sysMode = 'none'
+      this.sysMode = 'files'
       
       if(this.$route.name !== 'files' && this.showLeftTabFlag){
         this.$router.push({'name':'files'})
@@ -355,7 +409,7 @@ export default {
       }
     },
     updocToggle(){
-      this.sysMode = 'none'
+      this.sysMode = 'upfile'
       if(this.$route.name !== 'updoc' && this.showLeftTabFlag){
         this.$router.push({'name':'updoc'})
       }else{
@@ -374,18 +428,23 @@ export default {
       this.featureForm.geom = strwkt
       this.featureForm.featuretype = this.drawingFeature.getGeometry().getType()
       this.featureForm.fid = nanoid(10)
-    
 
-      postFeature(this.featureForm).then(res=>{
+      let formData = new FormData();
+      let keys = Object.keys(this.featureForm);
+      keys.forEach((key) => {
+        if (key !== "date" && key !== "time") {
+          formData.append(key, this.featureForm[key]);
+        }
+      });
+
+      postFeature(formData).then(res=>{
         this.$message({message:'设施成功上传至数据库', type:'success'});
-        this.upfeatureForm = false
+
+        this.upfeaFormFlag = false
+
         this.setFaciProperties(this.drawingFeature, this.featureForm)
         this.drawingFeature.setId(this.featureForm.fid)
         this.facilitySource.addFeature(this.drawingFeature)
-        // this.facInfos.push({
-        //   "fid":this.featureForm.fid,
-        //   "faciname":this.featureForm.faciname
-        // })
 
         this.featureForm = {
           fid:"",
@@ -394,6 +453,8 @@ export default {
           facitype:"",
           featuretype:"",
           geom:"",
+
+          file:"",
         }
       }).catch(error=>{
         console.log(error)
@@ -422,7 +483,7 @@ export default {
           });
 
           this.isDrawing = false
-          this.upfeatureForm=true
+          this.upfeaFormFlag=true
         });
       }
     },
@@ -433,7 +494,7 @@ export default {
     },
     dltDrawedFeature(){
       this.editVecSource.removeFeature(this.drawingFeature)
-      this.upfeatureForm =false
+      this.upfeaFormFlag =false
       this.featureForm = {
           fid:"",
           faciname:"",
@@ -823,6 +884,9 @@ export default {
         condition: click,
         layers:[this.vecLayer_facilities],
         style: new Style({
+          image: new Icon({
+            src: '/location.svg',
+          }),
           stroke: new Stroke({
             color: '#609966',
             width: 3
@@ -974,12 +1038,19 @@ $mapheight: 671px;
 .upfeatureForm{
   width: 30%;
   height: 45%;
+
   position: absolute;
-  top: 27%;
-  left: 35%;
+  top: 50%;
+  left: 50%;
+  transform:translate(-50%, -50%);
+
+  border-radius: 30px;
+  box-shadow: 0 0 3px rgba(1, 0, 1, 0.3);
+
   background-color: #fff;
+
   display: flex;
-  padding-top: 30px;
+  padding: 50px;
   
   .formContent{
     margin: 0;
@@ -1019,6 +1090,15 @@ $mapheight: 671px;
   width: 100%;
 
   background: rgba(0,0,0,0.7);
+}
+.upFeatureFormCon{
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  height: 100%;
+  width: 100%;
+
+  background: rgba(255,255,255,0.5);
 }
 .facinfo{
   opacity: 1;

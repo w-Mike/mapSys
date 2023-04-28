@@ -1,14 +1,24 @@
 <template>
   <div class="facinfo">
     <div class="basicInfo">
-      <h3>设施名：</h3> 
-      <p>{{ facinfo.faciname }}</p>
-      <h3>设施描述</h3>
-      <p>{{ facinfo.facidesc }}</p>
-      <h3>设施类别</h3>
-      <p>{{ facinfo.facitype }}</p>
-      <h3>设施图片</h3>
-      <p>未上传</p>
+      
+      <div class="shortInfo">
+        <div class="stitem">
+          <h3>设施名</h3> 
+          <p>{{ facinfo.faciname }}</p>
+        </div>
+        <div class="stitem" style="margin-left:50px;">
+          <h3>设施类别</h3>
+          <p>{{ facinfo.facitype }}</p>
+        </div>
+      </div>
+
+      <div class="longinfo">
+        <h3>设施描述</h3>
+        <p>{{ facinfo.facidesc }}</p>
+        <h3>设施图片</h3>
+        <img :src="imgUrl" alt="未上传" class="facimg">
+      </div>
     </div>
 
     <div class="divider"></div>
@@ -42,6 +52,9 @@ export default {
     return{
       facinfo: {},
       files: [],
+
+      urlprefix:"http://localhost:9999/",
+      imgUrl:"",
     }
   },
   methods:{
@@ -50,6 +63,7 @@ export default {
       if(item = sessionStorage.getItem(fid)){
         let parseItem =JSON.parse(item)
         this.facinfo=parseItem.facinfo
+
         this.files=parseItem.files
       }else{
         getfacinfobyid({"id": fid}).then(res=>{
@@ -64,14 +78,20 @@ export default {
         })
       }
     },
+    setImgUrl(fid){
+      this.imgUrl = this.urlprefix + String(fid) +'/picture.png'
+      console.log(this.imgUrl)
+    }
   },
   watch:{
     facinfoId:function(newVal){
       this.getData(newVal)
+      this.setImgUrl(newVal)
     },
     reqData:function(newVal){
       if(newVal){
         this.getData(this.facinfoId)
+        this.setImgUrl(this.facinfoId)
       }
     }
   }
@@ -86,7 +106,7 @@ export default {
   h3{
     margin:0;
     margin-top: 20px;
-  }
+  } 
   p{
     margin: 0;
   }
@@ -143,8 +163,16 @@ export default {
       margin: 0 auto;
     }
   }
+  & > div{
+    width: 50%;
+  }
 }
-
+.facimg{
+  width: 270px;
+}
+.shortInfo{
+  display: flex;
+}
 
 
 </style>>
