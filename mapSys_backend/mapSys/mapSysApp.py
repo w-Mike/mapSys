@@ -59,7 +59,7 @@ class gisdocsModel(db.Model):
         self.dateTime = formData["dateTime"]
         self.localpath = formData["localpath"]
         self.deleted = False
-        self.webURL = "生成一个URL"
+        self.webURL = formData['url']
         self.correfid = formData["correfid"]
 
     def __repr__(self):
@@ -142,16 +142,19 @@ def handle_gisdocs():
     if not os.path.exists(docPath): 
       os.mkdir(docPath)   
   
-    saveLocalpath = os.path.join(docPath, secure_filename(file.filename))
+    absolutePath = os.path.join(docPath, secure_filename(file.filename))
+
+    relativePath = os.path.join( formData["correfid"], secure_filename(file.filename))
 
     # 增添formData的属性
-    formData['localpath'] = docPath
+    formData['localpath'] = relativePath
+    formData['url'] = "localhost:9999"+ "/" + formData["correfid"] + "/" + secure_filename(file.filename)
 
     new_gisdoc = gisdocsModel(formData)
     db.session.add(new_gisdoc)
     db.session.commit()
 
-    file.save(saveLocalpath)
+    file.save(absolutePath)
   
     segidsList = formData['segids'].split(',')
     if(segidsList):
@@ -185,6 +188,7 @@ def handle_gisdocs():
     data = dict(request.get_json())
     print(data)
     gisdocsModel.query.filter_by(id=data["id"]).update({"deleted":True})
+    docstosegsModel.query.filter_by(docid=data["id"]).delete()
     db.session.commit()
     return "success deleted"
 @app.route('/splitline', methods=['GET'])
@@ -212,7 +216,7 @@ def handle_fidnames():
     ]
     return {"data":fidnames}
 
-@app.route('/facilities', methods=["GET", 'POST'])
+@app.route('/facilities', methods=["GET", 'POST', 'DELETE'])
 def handle_facilities():
   if request.method == "GET":
     facilities = facilitiesModel.query.all()
@@ -245,7 +249,16 @@ def handle_facilities():
     
     file.save(os.path.join(facPath, "picture.png"))
     return {'message': f"doc {new_facility.faciname} 成功被添加到数据库"}
-  
+  elif request.method == 'DELETE':
+    data = dict(request.get_json())
+    print(data)
+    faci = facilitiesModel.query.filter_by(fid=data["id"]).first()
+    segs = facitosegsModel.query.filter_by(fid = data["id"]).delete()
+    db.session.delete(faci)
+    db.session.commit()
+    return "success deleted facility, its id is"+ data["id"]
+
+
 def sidToSegname(sidstr):
   sidInt = int(sidstr)
   return "km" + str(int(sidInt/10)) + "+" + str(sidInt%10)
@@ -292,11 +305,14 @@ def handle_facbyid():
     print(docs)
     docinfo = [
       {
+        "category": doc.category,
         "id": doc.id,
-        "name":doc.name,
-        "description":doc.description,
-        "category":doc.category,
-        "datetime":doc.dateTime,
+        "name": doc.name,
+        "description": doc.description,
+        "webURL":doc.webURL,
+        "dateTime":doc.dateTime,
+        "correfid":doc.correfid,
+
       }for doc in docs 
     ]
 
@@ -321,3 +337,5 @@ def handle_docbyfid():
     return docinfo
 
         
+# if __name__ == "__main__":
+#   app.run(host="192.168.1.100", port="5000")

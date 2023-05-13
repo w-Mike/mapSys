@@ -62,6 +62,15 @@ export const dltfilebyId = (data)=>{
   })
 }
 
+// 删除设施
+export const dltfacbyId = (data)=>{
+  return request({
+    method:"DELETE",
+    url:"facilities",
+    data
+  })
+}
+
 // 通过设施id获取设施信息
 export const getfacinfobyid = (params)=>{
   return request({

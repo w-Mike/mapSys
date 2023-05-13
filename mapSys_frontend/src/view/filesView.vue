@@ -1,13 +1,20 @@
 <template>
   
   <div>
-    <h2 v-show="files.length" style="margin-top:20px; margin-left:20px;">文件列表：</h2>
+    <h2 style="margin-top:20px; margin-left:20px;">文件列表：</h2>
     <div class="filesList">
       <div class="list" v-loading="isloading">
         <div v-for="file in files" :key="file.id" class="fileRow" >
           <div class="content">
             <div>
-              <span>{{ file.name }}</span>
+              <el-popover
+                placement="bottom"
+                width="200"
+                trigger="click"
+                title="文件描述"
+                :content="file.description">
+                <span slot="reference" class="nameSpan">{{ file.name }}</span>
+              </el-popover>
               <el-tag class="elTag" type="success">{{ file.category }}</el-tag>
               <el-tag class="elTag" type="success">{{ file.faciname }}</el-tag>
             </div>
@@ -15,6 +22,7 @@
               <em>{{ $dayjs(file.dateTime).format("YYYY-MM-DD") }}</em>
               <el-button class="elbutton" size="small" type="primary" @click="downloadFile(file.correfid.trim(), file.id.trim())">下载</el-button>
               <el-button size="small" type="danger" @click="dltFile(file.id.trim(), file.correfid.trim())">删除</el-button>
+              <el-button size="small" type="warning">编辑</el-button>
             </div>
           </div>
           <hr class="divider">
@@ -88,11 +96,14 @@ export default {
 
     getFiles(){
       reqFiles().then((response) => {
+        console.log("发送了网络请求，请求内容为文件列表的信息")
         this.isloading=false
         let resData = response.data.gisdocs
 
-        resData.forEach((item, index)=>{
-          item.faciname = localStorage.getItem(item.correfid.trim())
+        resData.forEach((item)=>{
+          if(!(item.faciname = localStorage.getItem(item.correfid.trim()))){
+            item.faciname = "设施已被删除"
+          }
         })
 
         this.files = resData;
@@ -139,18 +150,19 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .list {
   position: relative;
   margin: 10px 20px;
   width: 95%;
   box-shadow: 0 0 3px rgba(1, 0, 1, 0.3);
-  height: 90%;
+  height: 560px;
   overflow-y: scroll;
   .content {
     display: flex;
     justify-content: space-between;
-    margin: 3px auto;
+    margin: 2px auto;
+    padding: 10px 18px;
     .elbutton {
       margin-left: 2em;
     }
@@ -159,15 +171,15 @@ export default {
       color: black;
       font: italic;
     }
+    &:hover{
+      font-weight: bold;
+    }
+    .nameSpan:hover{
+      cursor: pointer;
+    }
   }
   .elTag{
     margin-left: 10px;
-  }
-  .content{
-    padding: 10px 18px;
-  }
-  .content:hover{
-    background-color: #faf8f1;
   }
   .divider{
       width: 96%;

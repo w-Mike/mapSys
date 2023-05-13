@@ -20,7 +20,8 @@ import {
   CheckboxGroup,
   Checkbox,
   Popconfirm,
-  
+  Link,
+  Popover,
 } from 'element-ui'
 
 export default {
@@ -46,5 +47,7 @@ export default {
     Vue.use(CheckboxGroup)
     Vue.use(Checkbox)
     Vue.use(Popconfirm)
+    Vue.use(Link)
+    Vue.use(Popover)
   }
 }

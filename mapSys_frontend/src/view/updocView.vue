@@ -1,5 +1,6 @@
 <template>
   <div class="docsContainer">
+    <h2 style="margin:0; margin-top:20px; margin-left:20px; ">文件上传：</h2>
 
     <el-form class="formContent" ref="form" :model="form" :action="onSubmit" label-width="80px">
       <div class="outter">
@@ -35,16 +36,12 @@
         </el-form-item>
 
         <el-form-item label="创建时间" required>
-          <el-col :span="11">
-            <el-date-picker type="date" placeholder="选择日期" v-model="form.date" style="width: 100%;"></el-date-picker>
-          </el-col>
-          <el-col class="line" :span="1">
-            <p class="divider">--</p>
-          </el-col>
-          <el-col :span="11">
-            <el-time-picker placeholder="选择时间" v-model="form.time" style="width: 100%;"></el-time-picker>
-          </el-col>
+          <div class="timePicker">
+            <el-date-picker type="date" placeholder="选择日期" v-model="form.date" style="width: 40%;margin-right:5px;"></el-date-picker>
+            <el-time-picker placeholder="选择时间" v-model="form.time" style="width: 40%;"></el-time-picker>
+          </div>
         </el-form-item>
+       
 
         <el-form-item label="文件上传" required>
           <el-upload
@@ -186,7 +183,7 @@ export default {
 <style lang="scss" scoped>
 .formContent{
   display: flex;
-  padding: 30px;
+  padding: 20px;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
@@ -197,6 +194,10 @@ export default {
   .selectDiv{
     display: flex;
     justify-content: space-between;
+  }
+
+  .el-form-item{
+    margin-bottom: 18px;
   }
 }
 

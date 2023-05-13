@@ -9,8 +9,8 @@
               <span>{{ fac.faciname }}</span>
               <el-tag class="elTag" type="success">{{ fac.facitype }}</el-tag>
             </div>
-            <div>
-              <!-- <el-button size="small" type="success" @click.stop="editFeature">编辑</el-button> -->
+            <div class="facbuttons">
+              <el-button size="small" type="danger" @click.stop="dltFeature(fac.fid)" >删除</el-button>
             </div>
           </div>
           <hr class="divider">
@@ -27,41 +27,43 @@ export default {
 
       },
       showFormFlag: false,
-
     }
   },
   methods:{
-    fileChange(file,fileList) {
-      this.featureForm.file = file.raw
-    },
-    beforeRemove(file, fileList){
-      return this.$confirm(`确定移除 ${ file.name }？`);
-    },
-    chooseFile(params){
-      this.featureForm.file = params.file!==null ? params.file.raw : null
-    },
-    handleRemove(){},
+    dltFeature(fid){
 
-    editFeature(){
-
+      this.$confirm("确定删除该设施吗？（设施关联文件将被保留）", '提示', {
+        confirmButtonText:'确定',
+        cancelButtonText:'取消',
+        type: 'warning'
+      }).then(()=>{
+        this.$eventBus.$emit("dltFeature", fid)
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        });
+      }).catch(()=>{
+        this.$message({
+          type: 'warning',
+          message: '已取消删除'
+        }); 
+      })
     },
     movetoFaci(facid){
-      console.log(facid)
       this.$eventBus.$emit("movetoFaci", facid)
     }
   },
   created(){
-    console.log(this.facInfos)
   }
 }
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .list {
   position: relative;
   margin: 10px 20px;
   width: 95%;
   box-shadow: 0 0 3px rgba(1, 0, 1, 0.3);
-  height: 90%;
+  height: 560px;
   overflow-y: scroll;
   .content {
     display: flex;
@@ -74,6 +76,9 @@ export default {
       text-decoration: none;
       color: black;
       font: italic;
+    }
+    &:hover{
+      font-weight: bold;
     }
   }
   .elTag{

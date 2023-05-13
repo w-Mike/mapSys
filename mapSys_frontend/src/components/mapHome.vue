@@ -128,9 +128,10 @@
         <router-view :facInfos="facInfos"></router-view>
       </div>
 
+      <!-- 设施信息 -->
       <div class="facInfoCon" v-show="facInfoShowFlag" @click="facInfoShowFlag = !facInfoShowFlag">
         <div class="temp" @click.stop="">
-          <fac-info class="facinfo" :facinfoId="facinfoId" :reqData="facInfoShowFlag"></fac-info>
+          <fac-info class="facinfo" :facinfoId="facinfoId" :reqData="facInfoShowFlag" @dltFaci="handleDltFaci"></fac-info>
         </div>
       </div>
 
@@ -142,7 +143,7 @@ import VecToggle from "@/components/vecToggle.vue"
 import FacInfo from "@/components/facInfo.vue"
 
 import {request} from '@/utils/request'
-import {postFeature, postCorre, getfacinfobyid} from "@/utils/api"
+import {postFeature, postCorre, getfacinfobyid, dltfacbyId} from "@/utils/api"
 import { nanoid } from 'nanoid'
 
 // 引入openlayer的包
@@ -256,10 +257,13 @@ export default {
     };
   },
   mounted() {
-
+    this.$eventBus.$on("dltFeature", (fid)=>{
+      this.handleDltFaci(fid)
+      this.removeHlLayer()
+    })
     this.$eventBus.$on("movetoFaci", (facid)=>{
         this.clearCorreDraw()
-        let feature = this.getFaciFeatureFromId(facid)
+        let feature = this.getFaciFeatureById(facid)
         this.positionExtent(feature)
     })
     this.$eventBus.$on("chgTileMap", (mapType) => this.changeBasemap(mapType));
@@ -367,13 +371,38 @@ export default {
     isCorreingFaciId:{
       handler(newVal, oldVal){
         this.clearCorreDraw()
-        let feature = this.getFaciFeatureFromId(newVal)
+        let feature = this.getFaciFeatureById(newVal)
         this.postCorreData.fid = newVal
         this.positionExtent(feature)
       }
     }
   },
   methods: {
+    handleDltFaci(facid){
+      console.log("自定义事件中", facid)
+
+      // 在设施图层中找到设施id为facid的设施要素，并将该要素移除图层
+      this.facilitySource.removeFeature(this.getFaciFeatureById(facid))
+      // facInfos是传输给设施列表路由组件的一个props,为一个数组，因为删除了该设施，故应该将facInfos中的该设施也删除。
+      // facInfos的属性有 fid faciname facitype 和 facidesc
+      let faciToRemoveId = this.facInfos.findIndex(obj => obj.fid === facid)
+      if(faciToRemoveId !== -1){
+        this.facInfos.splice(faciToRemoveId, 1)
+      }
+      console.log(this.facInfos)
+      // facinfo的窗口显示flag应该被置false
+      this.facInfoShowFlag = false
+      // 删除localstorage中设施信息
+      localStorage.removeItem(facid)
+
+      // 向后端发送请求，删除设施表中该设施
+      dltfacbyId({'id':facid}).then(res=>{
+        console.log("删除设施成功")
+
+      }).catch(error=>{
+        console.log("删除设施失败")
+      })
+    },
     fileChange(file,fileList) {
       this.featureForm.file = file.raw
     },
@@ -445,6 +474,7 @@ export default {
         this.setFaciProperties(this.drawingFeature, this.featureForm)
         this.drawingFeature.setId(this.featureForm.fid)
         this.facilitySource.addFeature(this.drawingFeature)
+        this.editVecSource.removeFeature(this.drawingFeature)
 
         this.featureForm = {
           fid:"",
@@ -514,7 +544,7 @@ export default {
 
       this.postCorreData['fid'] = this.isCorreingFaciId
 
-      let isCorreingFaciFeature = this.getFaciFeatureFromId(this.isCorreingFaciId)
+      let isCorreingFaciFeature = this.getFaciFeatureById(this.isCorreingFaciId)
       let featureType = isCorreingFaciFeature.getGeometry().getType()
 
       this.postCorreData.segIds = new Set()
@@ -699,9 +729,10 @@ export default {
       this.facInfos.push({
           "fid":faci.fid,
           "faciname":faci.faciname,
-
-          "facitype": faci.facitype,          
+          "facitype": faci.facitype,  
+          "facidesc":faci.facidesc        
       })
+      localStorage.setItem(faci.fid, faci.faciname)
     },
     faci_wkbHandler(facilities){
       return facilities.map((faci) => {
@@ -716,7 +747,7 @@ export default {
         return feature
       })
     },
-    getFaciFeatureFromId(id){
+    getFaciFeatureById(id){
       let retFeature = null
       this.facilitySource.getFeatures().forEach((item,index)=>{
         if(item.getId() === id){
@@ -768,7 +799,7 @@ export default {
           }),
           style: new Style({
             stroke: new Stroke({
-              color: "rgb(254, 255, 134)",
+              color: "#fea23d",
               width: 15,
             }),
           }),
