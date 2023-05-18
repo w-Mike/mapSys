@@ -148,7 +148,7 @@ def handle_gisdocs():
 
     # 增添formData的属性
     formData['localpath'] = relativePath
-    formData['url'] = "localhost:9999"+ "/" + formData["correfid"] + "/" + secure_filename(file.filename)
+    formData['url'] = "http://localhost:9999"+ "/" + formData["correfid"] + "/" + formData['docid'] + "/" +secure_filename(file.filename)
 
     new_gisdoc = gisdocsModel(formData)
     db.session.add(new_gisdoc)

@@ -7,11 +7,11 @@
         <div class="selectDiv">
           <el-form-item label="文件类型" required>
             <el-select v-model="form.category" placeholder="请选择文件类型">
-              <el-option label="文档" value="doc"></el-option>
-              <el-option label="数据" value="data"></el-option>
-              <el-option label="样本" value="sample"></el-option>
-              <el-option label="算法" value="algorithm"></el-option>
-              <el-option label="案例" value="case"></el-option>
+              <el-option label="描述文档" value="doc"></el-option>
+              <el-option label="文献论文" value="paper"></el-option>
+              <el-option label="新闻报道" value="news"></el-option>
+              <el-option label="解译标志文档" value="symdoc"></el-option>
+              <el-option label="图片文件" value="pic"></el-option>
             </el-select>
           </el-form-item>
         </div>

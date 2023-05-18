@@ -22,6 +22,7 @@ import {
   Popconfirm,
   Link,
   Popover,
+  Drawer,
 } from 'element-ui'
 
 export default {
@@ -49,5 +50,6 @@ export default {
     Vue.use(Popconfirm)
     Vue.use(Link)
     Vue.use(Popover)
+    Vue.use(Drawer)
   }
 }

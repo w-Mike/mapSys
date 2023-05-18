@@ -80,7 +80,11 @@
               </el-form-item>
 
               <el-form-item label="设施描述">
-                <el-input v-model="featureForm.facidesc"></el-input>
+                <el-input 
+                  v-model="featureForm.facidesc"
+                  rows="3"
+                  type="textarea"
+                ></el-input>
               </el-form-item>
 
               <el-form-item label="设施类别">
@@ -100,6 +104,8 @@
                   :auto-upload="false"
                   :multiple="false" 
                   :limit="1"
+
+                  :file-list="featureForm.file"
                   >
                   <el-button type="success">选择文件</el-button>   <span>(仅允许上传一个图片)</span>
               </el-upload>
@@ -157,13 +163,11 @@ import { Fill, Style, Stroke, Circle, Icon} from "ol/style";
 import View from "ol/View.js";
 import WKB from "ol/format/WKB.js";
 import XYZ from "ol/source/XYZ";
-import MousePosition from "ol/control/MousePosition.js";
 import { createStringXY } from "ol/coordinate.js";
-import { defaults as defaultControls } from "ol/control.js";
 import WKT from 'ol/format/WKT.js';
 import {Draw, Select} from 'ol/interaction.js';
 import { click, platformModifierKeyOnly } from 'ol/events/condition';
-
+import {Control,  defaults as defaultControls, FullScreen, OverviewMap, ScaleLine, ZoomSlider, ZoomToExtent, MousePosition} from 'ol/control.js';
 
 // 设施id  
 
@@ -188,7 +192,7 @@ export default {
         featuretype:"",
         geom:"",
 
-        file:"",
+        file:[],
       },
       facilitiesName:[],
       faciType:[
@@ -312,6 +316,7 @@ export default {
       this.isShowRightTab = false
       this.sysMode='none'
     })
+
     this.initMap();
   },
   watch:{
@@ -395,6 +400,9 @@ export default {
       // 删除localstorage中设施信息
       localStorage.removeItem(facid)
 
+      // 删除高亮图层
+      this.removeHlLayer()
+
       // 向后端发送请求，删除设施表中该设施
       dltfacbyId({'id':facid}).then(res=>{
         console.log("删除设施成功")
@@ -404,15 +412,20 @@ export default {
       })
     },
     fileChange(file,fileList) {
-      this.featureForm.file = file.raw
+      this.featureForm.file.push(file.raw)
     },
     beforeRemove(file, fileList){
-      return this.$confirm(`确定移除 ${ file.name }？`);
+      this.featureForm.file.pop()
+      return this.$confirm(`确定移除 ${ file.name }？`).then(()=>{
+        this.featureForm.file.pop()
+      }).catch(()=>{
+        console.log("error")
+      });
     },
-    chooseFile(params){
-      this.featureForm.file = params.file!==null ? params.file.raw : null
+
+    handleRemove(file, fileList){
+      console.log(fileList)
     },
-    handleRemove(){},
     facsToggle(){
       this.sysMode = 'facs'
 
@@ -454,15 +467,21 @@ export default {
         dataProjection: "EPSG:4326",  
         featureProjection: "EPSG:3857",
       });
+
       this.featureForm.geom = strwkt
       this.featureForm.featuretype = this.drawingFeature.getGeometry().getType()
       this.featureForm.fid = nanoid(10)
 
       let formData = new FormData();
       let keys = Object.keys(this.featureForm);
+
       keys.forEach((key) => {
-        if (key !== "date" && key !== "time") {
+        if(key !== "file"){
           formData.append(key, this.featureForm[key]);
+        }else{
+          if(this.featureForm[key].length!=0){
+            formData.append(key, this.featureForm[key][0])
+          }
         }
       });
 
@@ -484,7 +503,7 @@ export default {
           featuretype:"",
           geom:"",
 
-          file:"",
+          file:[],
         }
       }).catch(error=>{
         console.log(error)
@@ -525,6 +544,7 @@ export default {
     dltDrawedFeature(){
       this.editVecSource.removeFeature(this.drawingFeature)
       this.upfeaFormFlag =false
+
       this.featureForm = {
           fid:"",
           faciname:"",
@@ -532,6 +552,8 @@ export default {
           facitype:"",
           featuretype:"",
           geom:"",
+
+          file:[],
         }
     },
 
@@ -563,7 +585,7 @@ export default {
             stroke: new Stroke({
               color: 'rgba(255,92,92)',
               // lineDash: [5],
-              width: 15
+              width: 10
             })
           })
         });
@@ -800,7 +822,7 @@ export default {
           style: new Style({
             stroke: new Stroke({
               color: "#fea23d",
-              width: 15,
+              width: 10,
             }),
           }),
         })
@@ -841,8 +863,17 @@ export default {
           center: [10895116, 3563181],
           zoom: 7,
         }),
-        controls: defaultControls().extend([this.mousePositionControl]),
+        controls: defaultControls({"zoom":false, "rotate":false}).extend(
+          [
+            this.mousePositionControl,
+            // new FullScreen(),
+            // new OverviewMap(),
+            // new ScaleLine(),
+            // new ZoomSlider(),
+            // new ZoomToExtent()
+          ]),
       });
+      this.map.removeControl
       this.selectConfig()
 
       if(this.addSegLayersFlag){
@@ -950,8 +981,6 @@ $mapheight: 671px;
   --main-bg-color: rgb(42, 154, 230);
   margin: 0;
 }
-
-
 
 .container{
   min-width: 400px;
@@ -1068,7 +1097,7 @@ $mapheight: 671px;
 }
 .upfeatureForm{
   width: 30%;
-  height: 45%;
+  height: 50%;
 
   position: absolute;
   top: 50%;
@@ -1134,15 +1163,15 @@ $mapheight: 671px;
 .facinfo{
   opacity: 1;
 
+  box-sizing: border-box;
   position: absolute;
-  top:50%;
-  left:50%;
-  width: 600px;
-  height: 60%;
-  transform: translate(-50%, -50%);
+  bottom:0%;
+  width: 100%;
+  height: 50%;
+  // transform: translate(-50%, -50%);
 
-  border-radius: 30px;
-  box-shadow: 0 0 3px rgba(1, 0, 1, 0.3);
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
 }
 
 </style>
